@@ -1,0 +1,36 @@
+.navbar {
+  background-color: #6200ea;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.navbar-title h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.navbar-links {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+  padding: 0;
+  margin: 0;
+}
+
+.navbar-links li a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.navbar-links li.active a {
+  text-decoration: underline;
+}
+
+.navbar-links li a:hover {
+  opacity: 0.8;
+}

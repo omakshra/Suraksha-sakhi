@@ -1,38 +1,124 @@
+/* src/App.css */
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-color: #f5f5f5;
+}
+
 .App {
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.navbar {
+  background-color: #6200ea;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.navbar h3 {
+  margin: 0;
+  font-size: 1.2rem;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.navbar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.navbar li {
+  margin-left: 1rem;
+}
+
+.navbar a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.navbar a:hover {
+  text-decoration: underline;
+}
+
+.home {
+  padding: 2rem;
+}
+
+.home h1 {
+  color: #6200ea;
+}
+
+.home p {
+  font-size: 1.1rem;
+  color: #333;
+}
+.home-container {
+  min-height: 90vh;
+  padding: 40px 20px;
+  text-align: center;
+  background: linear-gradient(to bottom right, #f3e8ff, #fde2f3);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.home-container h1 {
+  font-size: 2.5rem;
+  color: #5c2499;
+  margin-bottom: 15px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.home-subtitle {
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto 10px auto;
+  color: #6b308e;
+}
+
+.home-subsubtitle {
+  font-size: 1rem;
+  max-width: 500px;
+  margin: 0 auto 30px auto;
+  color: #7d3cb3;
+}
+
+.feature-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  max-width: 1000px;
+  width: 100%;
+}
+
+.feature-card {
+  background: linear-gradient(135deg, #e5d4f7, #f8e0f8);
+  border-radius: 15px;
+  padding: 20px;
+  width: 280px;
+  text-decoration: none;
+  color: #4a148c;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+}
+
+.feature-card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.feature-card p {
+  font-size: 0.95rem;
+  color: #5a189a;
 }
