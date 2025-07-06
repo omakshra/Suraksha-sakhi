@@ -1,4 +1,4 @@
-
+import "./expenses.css";
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Button,
@@ -172,13 +172,13 @@ function Expenses() {
         title: { display: true, text: "Date" },
       },
       y: {
-        title: { display: true, text: "Amount (€)" },
+        title: { display: true, text: "Amount (₹)" },
       },
     },
   };
 
   return (
-    <Container className="mt-5">
+    <Container className="expense-container">
       <h3 className="mb-4">Expense Tracker</h3>
 
       <InputGroup className="mb-3">
@@ -221,7 +221,9 @@ function Expenses() {
             <Card>
               <Card.Body>
                 <Card.Title>Total Expenses</Card.Title>
-                <Card.Text>€{totalExpense.toFixed(2)}</Card.Text>
+                <Card.Text>
+                  ₹{Number(totalExpense).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </Card.Text>
               </Card.Body>
             </Card>
           </motion.div>
@@ -257,7 +259,7 @@ function Expenses() {
           </Col>
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Amount (€)</Form.Label>
+              <Form.Label>Amount (₹)</Form.Label>
               <Form.Control
                 type="number"
                 value={amount}
@@ -314,7 +316,8 @@ function Expenses() {
         {currentExpenses.map((exp) => (
           <ListGroup.Item key={exp.id}>
             <div>
-              <strong>{exp.name}</strong> — €{exp.amount} on {exp.date}<br />
+              <strong>{exp.name}</strong> — ₹
+              {Number(exp.amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })} on {exp.date}<br />
               {exp.description} | {exp.category} | {exp.status}
             </div>
             <div className="mt-2">
