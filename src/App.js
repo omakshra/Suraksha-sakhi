@@ -177,8 +177,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           {/* <Route path="/chatbot" element={<ChatbotAdvisor />} /> */}
-          <Route path="/budgetplanner" element={<BudgetPlanner />} />
-          {/* <Route path="/documenttranscriber" element={<DocumentTranscriber />} /> */}
+          <Route path="/budgetplanner/*" element={<BudgetApp />} />
+          <Route path="/documenttranscriber" element={<DocumentTranscriber />} />
         </Routes>
       </BrowserRouter>
     </div>

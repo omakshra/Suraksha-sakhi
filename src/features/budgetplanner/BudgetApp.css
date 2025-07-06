@@ -1,62 +1,143 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap");
+
+:root {
+  --primary-color: #8f59b1;         /* deep purple */
+  --hover-color: #4a148c;           /* dark purple */
+  --secondary-color: #ba68c8;       /* light purple */
+  --background-color: #f5f5f5;      /* light gray */
+  --accent-color: #f3e5f5;          /* soft lavender */
+  --accent-hover: #e1bee7;          /* hover lavender */
+  --link: #6a1b9a;
+  --link-hover: #4a148c;
+  --text-color: #000000;
+}
+
 body {
-  font-family: 'Segoe UI', sans-serif;
-  background-color: #f5f5f5;
-  margin: 0;
-  padding: 0;
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
-.dashboard {
-  padding: 2rem;
-}
-
-.card-box {
-  background-color: #2c7da0;
-  color: white;
-  padding: 2.5rem;
-  border-radius: 12px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  margin-bottom: 2rem;
-  transition: transform 0.3s ease;
-  height: 90%;
-  width: 90%;
-}
-
-.card-box:hover {
-  transform: translateY(-4px);
-}
-
-.card-box h5 {
-  font-size: 1.6rem;
-  color: #bde0fe;
-  margin-bottom: 1rem;
-}
-
-.card-box p {
-  font-size: 2.6rem;
+.dashboard-title {
+  color: var(--primary-color);
   font-weight: bold;
-  margin: 0;
+  font-size: 2rem;
 }
 
-.reload-button {
-  background-color: #023047;
+.secondary-button {
+  background-color: var(--secondary-color);
   color: white;
   border: none;
-  padding: 0.5rem 1.2rem;
-  border-radius: 8px;
+  padding: 10px 16px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.secondary-button:hover {
+  background-color: #9c27b0;
+  transform: scale(1.05);
+}
+
+/* Consistent spacing between cards */
+.row > [class*='col'] {
+  padding: 10px;
+}
+
+.info-card {
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  height: 100%;
+}
+
+.info-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.info-card-title {
+  font-size: 1.5rem;
+  color: var(--accent-color);
+  margin-bottom: 10px;
+}
+
+.info-card-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 15px;
+}
+
+.info-card-link {
+  color: white;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.info-card-link:hover {
+  color: var(--accent-color);
+}
+
+.icon-left {
+  margin-right: 5px;
+}
+
+.icon-right {
+  margin-left: 5px;
+}
+
+/* Feature Highlight Cards (if used later) */
+.feature-card {
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+  color: #4a148c;
+  border-radius: 12px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+  text-decoration: none;
+  display: block;
+}
+
+.feature-card:hover {
+  transform: scale(1.02);
+  background: var(--accent-hover);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+  color: #4a148c;
+}
+
+.feature-card h2 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.feature-card p {
+  margin: 0;
   font-size: 1rem;
-  transition: background-color 0.3s ease;
+  color: #6a1b9a;
 }
 
-.reload-button:hover {
-  background-color: #03557d;
-}
-
-@media screen and (max-width: 768px) {
-  .card-box p {
-    font-size: 2rem;
+@media (max-width: 768px) {
+  .row > [class*='col'] {
+      padding: 5px;
   }
-
-  .card-box h5 {
-    font-size: 1.2rem;
+  .dashboard-title {
+      font-size: 1.75rem;
+  }
+  .info-card-title {
+      font-size: 1.25rem;
+  }
+  .info-card-value {
+      font-size: 2rem;
+  }
+  .feature-card h2 {
+      font-size: 1.1rem;
+  }
+  .feature-card p {
+      font-size: 0.95rem;
   }
 }
