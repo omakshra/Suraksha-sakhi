@@ -1,11 +1,9 @@
-// src/App.js
-
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 
 import Navbar from './components/navbar';
-import BudgetPlanner from './features/budgetplanner/budgetplanner';
+import BudgetApp from './features/budgetplanner/BudgetApp';
 // import ChatbotAdvisor from './features/chatbot/ChatbotAdvisor';
 // import DocumentTranscriber from './features/documenttranscriber/documenttranscriber';
 
@@ -69,17 +67,15 @@ function Home() {
         const translatedTexts = await Promise.all(
           textsToTranslate.map(async (text, idx) => {
             const cacheKey = `translation_${selectedLanguage}_${text}`;
-            const useCache = false; // set to true later for performance
+            const useCache = false;
             if (useCache) {
               const cached = localStorage.getItem(cacheKey);
               if (cached) return cached;
             } else {
               if (selectedLanguage === "hi" && idx === 0) {
-                // Fallback manual Hindi for title
                 localStorage.setItem(cacheKey, "सुरक्षा सखी में आपका स्वागत है");
                 return "सुरक्षा सखी में आपका स्वागत है";
               } else if (selectedLanguage === "hi" && idx === 4) {
-                // Fallback manual Hindi for last feature
                 localStorage.setItem(cacheKey, "अपने दस्तावेज़ों को प्रबंधित करने के लिए हाथ से लिखे बिल, फॉर्म या रसीदों को डिजिटाइज़ करें।");
                 return "अपने दस्तावेज़ों को प्रबंधित करने के लिए हाथ से लिखे बिल, फॉर्म या रसीदों को डिजिटाइज़ करें।";
               } else {
@@ -181,7 +177,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           {/* <Route path="/chatbot" element={<ChatbotAdvisor />} /> */}
-          <Route path="/budgetplanner" element={<BudgetPlanner />} />
+          <Route path="/budgetplanner/*" element={<BudgetApp />} />
           {/* <Route path="/documenttranscriber" element={<DocumentTranscriber />} /> */}
         </Routes>
       </BrowserRouter>

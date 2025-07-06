@@ -1,0 +1,62 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard {
+  padding: 2rem;
+}
+
+.card-box {
+  background-color: #2c7da0;
+  color: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 2rem;
+  transition: transform 0.3s ease;
+  height: 90%;
+  width: 90%;
+}
+
+.card-box:hover {
+  transform: translateY(-4px);
+}
+
+.card-box h5 {
+  font-size: 1.6rem;
+  color: #bde0fe;
+  margin-bottom: 1rem;
+}
+
+.card-box p {
+  font-size: 2.6rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.reload-button {
+  background-color: #023047;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.reload-button:hover {
+  background-color: #03557d;
+}
+
+@media screen and (max-width: 768px) {
+  .card-box p {
+    font-size: 2rem;
+  }
+
+  .card-box h5 {
+    font-size: 1.2rem;
+  }
+}
