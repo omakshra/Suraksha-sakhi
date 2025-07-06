@@ -1,0 +1,136 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap");
+
+:root {
+  --primary-color: #8f59b1;
+  --hover-color: #4a148c;
+  --secondary-color: #ba68c8;
+  --accent-color: #f5e9f7;
+  --accent-hover: #f3d9fa;
+  --link: #6a1b9a;
+}
+
+.income-container {
+  background: var(--accent-color);
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 1000px;
+  margin: 2rem auto;
+  box-shadow: 0 4px 12px rgba(106, 27, 154, 0.1);
+  font-family: 'Inter', sans-serif;
+}
+
+.income-container h2 {
+  color: var(--primary-color);
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Search Input */
+.income-container .input-group .form-control {
+  border-radius: 10px;
+  border: 1px solid var(--secondary-color);
+}
+
+/* Card Display */
+.income-container .card {
+  border: none;
+  background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+  color: #4a148c;
+  border-radius: 12px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.income-container .card-title {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.income-container .card-text {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+/* Chart Styling */
+.income-container .chart-container {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(106, 27, 154, 0.08);
+  margin-top: 1rem;
+}
+
+/* Form Fields */
+.income-container form .form-label {
+  color: var(--link);
+  font-weight: 500;
+}
+
+.income-container form .form-control,
+.income-container form .form-select {
+  border-radius: 10px;
+  border: 1px solid var(--secondary-color);
+}
+
+.income-container form .form-control:focus,
+.income-container form .form-select:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 0.2rem rgba(186, 104, 200, 0.25);
+}
+
+/* Buttons */
+.income-container button,
+.income-container .btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: transform 0.2s, background-color 0.3s;
+}
+
+.income-container .btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.income-container .btn-primary:hover {
+  background-color: var(--hover-color);
+  border-color: var(--hover-color);
+  transform: translateY(-1px);
+}
+
+.income-container .btn-danger {
+  background-color: #e91e63;
+  border-color: #e91e63;
+}
+
+.income-container .btn-danger:hover {
+  background-color: #ad1457;
+  border-color: #ad1457;
+}
+
+/* List Items */
+.income-container .list-group-item {
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: #e1bee7;
+  color: #4a148c;
+  border: none;
+  box-shadow: 0 2px 4px rgba(106, 27, 154, 0.1);
+}
+
+/* Pagination Buttons */
+.income-container .pagination-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .income-container {
+    padding: 1rem;
+  }
+
+  .income-container .chart-container {
+    margin-top: 1rem;
+  }
+}

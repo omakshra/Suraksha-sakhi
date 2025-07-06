@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-
 import Navbar from './components/navbar';
 import BudgetApp from './features/budgetplanner/BudgetApp';
 // import ChatbotAdvisor from './features/chatbot/ChatbotAdvisor';
