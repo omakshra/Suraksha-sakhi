@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { Container, Row, Col, Button } from "react-bootstrap";
+import { Routes, Route, Navigate, Link } from "react-router-dom";
+import { Container, Row, Col, Button, Card } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faRotateRight } from "@fortawesome/free-solid-svg-icons";
+import { faRotateRight, faArrowRight } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
+import 'bootstrap/dist/css/bootstrap.min.css';        // ✅ Load Bootstrap first
+import "./BudgetApp.css";                             // ✅ Then your custom styles
 
 import Incomes from "./components/incomes";
 import Expenses from "./components/expenses";
-
-import "./BudgetApp.css";
 
 // Helper to format to Indian currency
 const formatINR = (amount) =>
@@ -18,68 +18,85 @@ const formatINR = (amount) =>
     minimumFractionDigits: 0,
   }).format(amount);
 
-// Dashboard component
+// InfoCard Component
+const InfoCard = ({ title, value, linkText, linkTo, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay }}
+    className="mb-3"
+  >
+    <Card className="info-card">
+      <Card.Body>
+        <Card.Title className="info-card-title">{title}</Card.Title>
+        <Card.Text className="info-card-value">{value}</Card.Text>
+        {linkText && linkTo && (
+          <Card.Link as={Link} to={linkTo} className="info-card-link">
+            {linkText}
+            <FontAwesomeIcon icon={faArrowRight} className="icon-right ms-2" />
+          </Card.Link>
+        )}
+      </Card.Body>
+    </Card>
+  </motion.div>
+);
+
+// Dashboard Component
 function Dashboard({ totalIncomes, totalExpenses }) {
   const total = totalIncomes - totalExpenses;
-
   const handleReload = () => window.location.reload();
 
   return (
-    <Container className="dashboard">
-      <h2 className="text-center">Dashboard</h2>
-      <p className="text-center">Here's a summary of your overall financial status.</p>
-
-      <div className="text-center mb-3">
-        <Button onClick={handleReload} className="reload-button">
-          <FontAwesomeIcon icon={faRotateRight} />
-        </Button>
-      </div>
-
-      {/* Total - Full Width */}
-      <Row className="mb-4">
-        <Col md={12}>
-          <motion.div
-            className="card-box"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <h5>Total</h5>
-            <p>{formatINR(total)}</p>
-          </motion.div>
+    <Container fluid className="mt-5">
+      {/* Header Row */}
+      <Row className="align-items-center justify-content-center mb-3 px-3">
+        <Col xs="auto" className="text-center">
+          <h2 className="dashboard-title">🌸 Welcome Back, Sakhi!</h2>
+          <p>Empowering your financial journey with AI and clarity.</p>
+        </Col>
+        <Col xs="auto" className="text-end">
+          <Button onClick={handleReload} className="secondary-button">
+            <FontAwesomeIcon icon={faRotateRight} className="icon-left" />
+          </Button>
         </Col>
       </Row>
 
-      {/* Incomes & Expenses Side by Side */}
-      <Row className="mb-4">
-        <Col md={6}>
-          <motion.div
-            className="card-box"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <h5>Incomes</h5>
-            <p>{formatINR(totalIncomes)}</p>
-          </motion.div>
+      {/* Total */}
+      <Row className="mb-4 px-3">
+        <Col md={12}>
+          <InfoCard
+            title="Total"
+            value={formatINR(total)}
+          />
         </Col>
-        <Col md={6}>
-          <motion.div
-            className="card-box"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <h5>Expenses</h5>
-            <p>{formatINR(totalExpenses)}</p>
-          </motion.div>
+      </Row>
+
+      {/* Incomes & Expenses */}
+      <Row className="px-3">
+        <Col xs={12} md={6}>
+          <InfoCard
+            title="Incomes"
+            value={formatINR(totalIncomes)}
+            linkText="Add or manage your Income"
+            linkTo="/budgetplanner/incomes"
+            delay={0.2}
+          />
+        </Col>
+        <Col xs={12} md={6}>
+          <InfoCard
+            title="Expenses"
+            value={formatINR(totalExpenses)}
+            linkText="Add or manage your Expenses"
+            linkTo="/budgetplanner/expenses"
+            delay={0.4}
+          />
         </Col>
       </Row>
     </Container>
   );
 }
 
-// Main App component
+// Main BudgetApp Component
 const BudgetApp = () => {
   const [incomes, setIncomes] = useState(() => {
     const saved = localStorage.getItem("incomes");
@@ -109,8 +126,14 @@ const BudgetApp = () => {
         path="dashboard"
         element={<Dashboard totalIncomes={totalIncomes} totalExpenses={totalExpenses} />}
       />
-      <Route path="incomes" element={<Incomes incomes={incomes} setIncomes={setIncomes} />} />
-      <Route path="expenses" element={<Expenses expenses={expenses} setExpenses={setExpenses} />} />
+      <Route
+        path="incomes"
+        element={<Incomes incomes={incomes} setIncomes={setIncomes} />}
+      />
+      <Route
+        path="expenses"
+        element={<Expenses expenses={expenses} setExpenses={setExpenses} />}
+      />
     </Routes>
   );
 };
