@@ -5,7 +5,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Navbar from './components/navbar';
 import BudgetApp from './features/budgetplanner/BudgetApp';
 // import ChatbotAdvisor from './features/chatbot/ChatbotAdvisor';
-// import DocumentTranscriber from './features/documenttranscriber/documenttranscriber';
+import DocumentTranscriber from './features/documenttranscriber/documenttranscriber';
 
 import { translateTextWithHF } from './utils/huggingfaceapi';
 
@@ -177,7 +177,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           {/* <Route path="/chatbot" element={<ChatbotAdvisor />} /> */}
-          <Route path="/budgetplanner/*" element={<BudgetApp />} />
+          <Route path="/budgetplanner" element={<BudgetPlanner />} />
           {/* <Route path="/documenttranscriber" element={<DocumentTranscriber />} /> */}
         </Routes>
       </BrowserRouter>
