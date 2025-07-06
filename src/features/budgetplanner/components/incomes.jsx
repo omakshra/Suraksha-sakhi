@@ -24,16 +24,16 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 
-import {
-  db,
-  ref,
-  push,
-  set,
-  onValue,
-  remove,
-  update,
-} from "../../firebase"; // 🔁 Adjust path as needed
-
+import { db } from "../../../utils/firebase"; // 🔁 Adjust path as needed
+import { 
+  collection, 
+  addDoc, 
+  getDocs, 
+  onSnapshot, 
+  doc, 
+  updateDoc, 
+  deleteDoc 
+} from "firebase/firestore";
 function Incomes() {
   const [incomes, setIncomes] = useState([]);
   const [name, setName] = useState("");
@@ -52,22 +52,17 @@ function Incomes() {
 
   // 🔁 Load incomes from Firebase on mount
   useEffect(() => {
-    const incomesRef = ref(db, "incomes");
-    const unsubscribe = onValue(incomesRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const loaded = Object.keys(data).map((key) => ({
-          id: key,
-          ...data[key],
-        }));
-        setIncomes(loaded);
-      } else {
-        setIncomes([]);
-      }
-    });
+  const unsubscribe = onSnapshot(collection(db, "incomes"), (snapshot) => {
+    const loaded = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setIncomes(loaded);
+  });
 
-    return () => unsubscribe();
-  }, []);
+  return () => unsubscribe();
+}, []);
+
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(incomes);
@@ -88,35 +83,39 @@ function Incomes() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!name || !amount || !date || !description || !category) {
-      alert("All fields are required.");
-      return;
-    }
+  e.preventDefault();
+  if (!name || !amount || !date || !description || !category) {
+    alert("All fields are required.");
+    return;
+  }
 
-    const confirm = window.confirm(
-      editing ? "Update this income?" : "Add new income?"
-    );
-    if (!confirm) return;
+  const confirmAction = window.confirm(
+    editing ? "Update this income?" : "Add new income?"
+  );
+  if (!confirmAction) return;
 
-    const incomeData = {
-      name,
-      amount,
-      date,
-      description,
-      status: isPaid ? "PAID" : "DUE",
-      category,
-    };
-
-    if (editing) {
-      await update(ref(db, `incomes/${currentIncome.id}`), incomeData);
-    } else {
-      const newRef = push(ref(db, "incomes"));
-      await set(newRef, incomeData);
-    }
-
-    resetForm();
+  const incomeData = {
+    name,
+    amount: parseFloat(amount),
+    date,
+    description,
+    status: isPaid ? "PAID" : "DUE",
+    category,
   };
+
+  try {
+    if (editing && currentIncome) {
+      const incomeDocRef = doc(db, "incomes", currentIncome.id);
+      await updateDoc(incomeDocRef, incomeData);
+    } else {
+      await addDoc(collection(db, "incomes"), incomeData);
+    }
+    resetForm();
+  } catch (error) {
+    console.error("Error saving income:", error);
+    alert("Error saving income. Check console for details.");
+  }
+};
 
   const resetForm = () => {
     setName("");
@@ -130,11 +129,18 @@ function Incomes() {
   };
 
   const handleRemove = async (id) => {
-    const confirm = window.confirm("Delete this income?");
-    if (confirm) {
-      await remove(ref(db, `incomes/${id}`));
-    }
-  };
+  const confirmDelete = window.confirm("Delete this income?");
+  if (!confirmDelete) return;
+
+  try {
+    const incomeDocRef = doc(db, "incomes", id);
+    await deleteDoc(incomeDocRef);
+  } catch (error) {
+    console.error("Error deleting income:", error);
+    alert("Error deleting income. Check console for details.");
+  }
+};
+
 
   const totalIncome = incomes.reduce(
     (total, income) => total + parseFloat(income.amount || 0),

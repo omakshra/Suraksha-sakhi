@@ -26,11 +26,18 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
 
+import { db } from "../../../utils/firebase";
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+} from "firebase/firestore";
+
 function Expenses() {
-  const [expenses, setExpenses] = useState(() => {
-    const savedExpenses = localStorage.getItem("expenses");
-    return savedExpenses ? JSON.parse(savedExpenses) : [];
-  });
+  const [expenses, setExpenses] = useState([]);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
@@ -47,9 +54,17 @@ function Expenses() {
 
   const categories = ["Utility", "Rent", "Groceries", "Entertainment", "Other"];
 
+  // Fetch expenses in real-time from Firestore
   useEffect(() => {
-    localStorage.setItem("expenses", JSON.stringify(expenses));
-  }, [expenses]);
+    const unsubscribe = onSnapshot(collection(db, "expenses"), (snapshot) => {
+      const loadedExpenses = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setExpenses(loadedExpenses);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(expenses);
@@ -69,7 +84,7 @@ function Expenses() {
     setCategory(expense.category || "");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !amount || !date || !description || !category) {
       alert("All fields are required, including the category.");
@@ -82,24 +97,26 @@ function Expenses() {
     if (!isConfirmed) return;
 
     const expenseData = {
-      id: editing ? currentExpense.id : Date.now(),
       name,
-      amount,
+      amount: parseFloat(amount),
       date,
       description,
       status: isPaid ? "PAID" : "DUE",
       category,
     };
 
-    if (editing) {
-      setExpenses(expenses.map((exp) =>
-        exp.id === currentExpense.id ? expenseData : exp
-      ));
-    } else {
-      setExpenses([...expenses, expenseData]);
+    try {
+      if (editing && currentExpense) {
+        const expenseDocRef = doc(db, "expenses", currentExpense.id);
+        await updateDoc(expenseDocRef, expenseData);
+      } else {
+        await addDoc(collection(db, "expenses"), expenseData);
+      }
+      resetForm();
+    } catch (error) {
+      console.error("Error saving expense:", error);
+      alert("Error saving expense. Check console for details.");
     }
-
-    resetForm();
   };
 
   const resetForm = () => {
@@ -113,14 +130,21 @@ function Expenses() {
     setCategory("");
   };
 
-  const handleRemove = (id) => {
-    if (window.confirm("Remove this expense?")) {
-      setExpenses(expenses.filter((exp) => exp.id !== id));
+  const handleRemove = async (id) => {
+    const confirmDelete = window.confirm("Remove this expense?");
+    if (!confirmDelete) return;
+
+    try {
+      const expenseDocRef = doc(db, "expenses", id);
+      await deleteDoc(expenseDocRef);
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+      alert("Error deleting expense. Check console for details.");
     }
   };
 
   const totalExpense = expenses.reduce(
-    (total, exp) => total + parseFloat(exp.amount),
+    (total, exp) => total + parseFloat(exp.amount || 0),
     0
   );
 
@@ -134,17 +158,21 @@ function Expenses() {
 
   const filteredExpenses = searchQuery
     ? expenses.filter((exp) =>
-        [exp.name, exp.description, exp.category || ""]
-          .some(val => val.toLowerCase().includes(searchQuery.toLowerCase()))
+        [exp.name, exp.description, exp.category || ""].some((val) =>
+          val.toLowerCase().includes(searchQuery.toLowerCase())
+        )
       )
     : expenses;
 
   const indexOfLastExpense = currentPage * expensesPerPage;
   const indexOfFirstExpense = indexOfLastExpense - expensesPerPage;
-  const currentExpenses = filteredExpenses.slice(indexOfFirstExpense, indexOfLastExpense);
+  const currentExpenses = filteredExpenses.slice(
+    indexOfFirstExpense,
+    indexOfLastExpense
+  );
 
-  const paginate = (num) => setCurrentPage(num);
-  const handlePreviousPage = () => setCurrentPage((p) => (p > 1 ? p - 1 : p));
+  const handlePreviousPage = () =>
+    setCurrentPage((p) => (p > 1 ? p - 1 : p));
   const handleNextPage = () =>
     setCurrentPage((p) =>
       p * expensesPerPage < filteredExpenses.length ? p + 1 : p
@@ -222,7 +250,9 @@ function Expenses() {
               <Card.Body>
                 <Card.Title>Total Expenses</Card.Title>
                 <Card.Text>
-                  ₹{Number(totalExpense).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                  ₹{Number(totalExpense).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
                 </Card.Text>
               </Card.Body>
             </Card>
@@ -307,7 +337,7 @@ function Expenses() {
         </Row>
 
         <Button type="submit" className="mb-3">
-          {editing ? "Update Expense" : "Add Expense"}
+          {editing ? "Update Expense" : "Add Expense"}{" "}
           <FontAwesomeIcon icon={faPlusCircle} className="ms-2" />
         </Button>
       </Form>
@@ -317,14 +347,26 @@ function Expenses() {
           <ListGroup.Item key={exp.id}>
             <div>
               <strong>{exp.name}</strong> — ₹
-              {Number(exp.amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })} on {exp.date}<br />
+              {Number(exp.amount).toLocaleString("en-IN", {
+                minimumFractionDigits: 2,
+              })}{" "}
+              on {exp.date}
+              <br />
               {exp.description} | {exp.category} | {exp.status}
             </div>
             <div className="mt-2">
-              <Button size="sm" className="me-2" onClick={() => handleEdit(exp)}>
+              <Button
+                size="sm"
+                className="me-2"
+                onClick={() => handleEdit(exp)}
+              >
                 <FontAwesomeIcon icon={faPenToSquare} /> Edit
               </Button>
-              <Button size="sm" variant="danger" onClick={() => handleRemove(exp.id)}>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={() => handleRemove(exp.id)}
+              >
                 <FontAwesomeIcon icon={faTrashCan} /> Remove
               </Button>
             </div>
