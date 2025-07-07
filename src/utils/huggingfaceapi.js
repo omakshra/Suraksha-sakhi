@@ -1,4 +1,4 @@
-// src/utils/huggingfaceapi.js
+import { postProcessLegalHindi } from './postProcessLegalHindi';
 
 const HF_API_KEY = process.env.REACT_APP_HF_API_KEY;
 
@@ -35,7 +35,7 @@ export async function translateTextWithHF(text, sourceLang = 'en', targetLang = 
 
             if (!response.ok) {
                 console.error('HF API error:', response.status, await response.text());
-                translatedLines.push(line); // fallback to original line
+                translatedLines.push(line);
                 continue;
             }
 
@@ -44,9 +44,10 @@ export async function translateTextWithHF(text, sourceLang = 'en', targetLang = 
             translatedLines.push(translatedText || line);
         } catch (error) {
             console.error('HF API call failed:', error);
-            translatedLines.push(line); // fallback
+            translatedLines.push(line);
         }
     }
 
-    return translatedLines.join('\n');
+    const finalTranslation = translatedLines.join('\n');
+    return targetLang === 'hi' ? postProcessLegalHindi(finalTranslation) : finalTranslation;
 }

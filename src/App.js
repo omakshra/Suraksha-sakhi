@@ -10,11 +10,7 @@ import { translateTextWithHF } from './utils/huggingfaceapi';
 
 // ----------------- Home Component -----------------
 
-function Home() {
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    localStorage.getItem("selectedLanguage") || "en"
-  );
-
+function Home({ selectedLanguage, setSelectedLanguage }) {
   const [translatedContent, setTranslatedContent] = useState({
     title: "Welcome to Suraksha Sakhi",
     subtitle: "Use these tools to take control of your finances, grow your business, and secure your future.",
@@ -66,7 +62,6 @@ function Home() {
         setLoading(true);
 
         const textsToTranslate = [
-          // skipping title for manual Hindi translation
           "Use these tools to take control of your finances, grow your business, and secure your future.",
           "Empowering women with AI, finance, and knowledge – in your language 🌸",
           "Ask questions about savings, business, or laws in your language and get instant guidance.",
@@ -79,10 +74,9 @@ function Home() {
         ];
 
         const translatedTexts = await Promise.all(
-          textsToTranslate.map(async (text) => {
-            const translated = await translateTextWithHF(text, "en", selectedLanguage);
-            return translated;
-          })
+          textsToTranslate.map((text) =>
+            translateTextWithHF(text, "en", selectedLanguage)
+          )
         );
 
         setTranslatedContent({
@@ -95,7 +89,6 @@ function Home() {
           feedbackDescription: translatedTexts[7],
           feedbackButton: translatedTexts[8]
         });
-
       } catch (error) {
         console.error("Translation failed:", error);
       } finally {
@@ -106,7 +99,6 @@ function Home() {
     translateContent();
   }, [selectedLanguage]);
 
-  // Manual Hindi titles
   const featureCardTitles = selectedLanguage === "hi"
     ? [
         "🤖 एआई चैटबॉट सलाहकार",
@@ -131,7 +123,6 @@ function Home() {
           <h1>{translatedContent.title}</h1>
           <p className="tagline">{translatedContent.tagline}</p>
 
-          {/* Language Selector */}
           <div className="language-selector">
             <button onClick={() => handleLanguageSelect("en", "English")}>English</button>
             <button onClick={() => handleLanguageSelect("hi", "हिंदी")}>हिंदी</button>
@@ -144,7 +135,6 @@ function Home() {
           </p>
           <p className="home-subtitle">{translatedContent.subtitle}</p>
 
-          {/* Feature Cards */}
           <div className="feature-cards">
             <FeatureCard
               title={featureCardTitles[0]}
@@ -163,7 +153,6 @@ function Home() {
             />
           </div>
 
-          {/* Feedback Section */}
           <div className="feedback-section">
             <h3>{translatedContent.feedbackHeader}</h3>
             <p>{translatedContent.feedbackDescription}</p>
@@ -176,6 +165,7 @@ function Home() {
     </div>
   );
 }
+
 
 // ----------------- FeatureCard Component -----------------
 
@@ -191,19 +181,35 @@ function FeatureCard({ title, description, link }) {
 // ----------------- App Component -----------------
 
 function App() {
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    localStorage.getItem("selectedLanguage") || "en"
+  );
+
   return (
     <div className="App">
       <BrowserRouter>
         <Navbar />
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <Home
+                selectedLanguage={selectedLanguage}
+                setSelectedLanguage={setSelectedLanguage}
+              />
+            }
+          />
           {/* <Route path="/chatbot" element={<ChatbotAdvisor />} /> */}
           <Route path="/budgetplanner/*" element={<BudgetApp />} />
-          <Route path="/documenttranscriber" element={<DocumentTranscriber />} />
+          <Route
+            path="/documenttranscriber"
+            element={<DocumentTranscriber selectedLanguage={selectedLanguage} />}
+          />
         </Routes>
       </BrowserRouter>
     </div>
   );
 }
+
 
 export default App;
