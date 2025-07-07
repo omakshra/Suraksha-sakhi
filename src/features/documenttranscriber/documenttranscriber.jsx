@@ -1,19 +1,29 @@
-// src/document-transcriber/documentTranscriber.jsx
-
 import React, { useState } from 'react';
 import Tesseract from 'tesseract.js';
-import { FaUpload, FaCopy, FaLanguage, FaSpinner } from 'react-icons/fa';
+import { FaUpload, FaCopy, FaLanguage, FaSpinner, FaUndo } from 'react-icons/fa';
+import './documenttranscriber.css';
+import { translateTextWithHF } from '../../utils/huggingfaceapi';
 
 const DocumentTranscriber = () => {
   const [image, setImage] = useState(null);
   const [extractedText, setExtractedText] = useState('');
   const [loading, setLoading] = useState(false);
   const [translatedText, setTranslatedText] = useState('');
+  const [isTranslated, setIsTranslated] = useState(false);
 
   const handleFileChange = (e) => {
     setImage(e.target.files[0]);
     setExtractedText('');
     setTranslatedText('');
+    setIsTranslated(false);
+  };
+
+  const cleanExtractedText = (text) => {
+    return text
+      .replace(/-\n/g, '')             // remove hyphenated line breaks
+      .replace(/\n{2,}/g, '\n')        // collapse multiple newlines
+      .replace(/[ \t]+/g, ' ')         // collapse multiple spaces
+      .trim();
   };
 
   const handleOCR = () => {
@@ -24,17 +34,21 @@ const DocumentTranscriber = () => {
       logger: (m) => console.log(m),
     })
       .then(({ data: { text } }) => {
-        setExtractedText(text);
+        const cleaned = cleanExtractedText(text);
+        setExtractedText(cleaned);
+        setTranslatedText('');
+        setIsTranslated(false);
         setLoading(false);
       })
       .catch((err) => {
         console.error(err);
+        alert("OCR failed. Please try again.");
         setLoading(false);
       });
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(extractedText || translatedText);
+    navigator.clipboard.writeText(translatedText || extractedText);
     alert('Text copied to clipboard!');
   };
 
@@ -42,105 +56,79 @@ const DocumentTranscriber = () => {
     if (!extractedText) return;
     setLoading(true);
     try {
-      // replace this with your pipeline:
-      const translated = extractedText.split(' ').reverse().join(' '); // placeholder reverse for demo
-      setTranslatedText(translated);
+      // Split into chunks for better translation accuracy
+      const chunks = extractedText.split(/\n+/).filter(line => line.trim() !== '');
+      const translatedChunks = [];
+
+      for (const chunk of chunks) {
+        const translated = await translateTextWithHF(chunk, "en", "hi");
+        translatedChunks.push(translated);
+      }
+
+      setTranslatedText(translatedChunks.join('\n\n'));
+      setIsTranslated(true);
     } catch (error) {
       console.error(error);
+      alert("Translation failed. Please try again.");
     }
     setLoading(false);
   };
 
-  return (
-    <div style={styles.container}>
-      <h2 style={styles.heading}>📄 AI-Powered Document Transcriber</h2>
+  const handleRevert = () => {
+    setTranslatedText('');
+    setIsTranslated(false);
+  };
 
+  return (
+    <div className="transcriber-container">
+      <h2 className="transcriber-heading">📄 AI-Powered Document Transcriber</h2>
       <input
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        style={styles.fileInput}
+        className="transcriber-file-input"
       />
-
-      <button onClick={handleOCR} style={styles.button}>
+      <button onClick={handleOCR} className="transcriber-button">
         <FaUpload style={{ marginRight: '8px' }} /> Extract Text
       </button>
 
       {loading && (
-        <div style={styles.loader}>
+        <div className="transcriber-loader">
           <FaSpinner className="spin" /> Processing...
         </div>
       )}
 
-      {(extractedText || translatedText) && (
+      {(extractedText || translatedText) && !loading && (
         <>
           <textarea
-            style={styles.textarea}
-            rows="12"
+            className="transcriber-textarea"
+            rows="18"
             value={translatedText || extractedText}
             onChange={(e) =>
-              translatedText
+              isTranslated
                 ? setTranslatedText(e.target.value)
                 : setExtractedText(e.target.value)
             }
           ></textarea>
 
-          <div style={styles.buttonGroup}>
-            <button onClick={handleCopy} style={styles.button}>
+          <div className="transcriber-button-group">
+            <button onClick={handleCopy} className="transcriber-button">
               <FaCopy style={{ marginRight: '6px' }} /> Copy Text
             </button>
-            <button onClick={handleTranslate} style={styles.button}>
-              <FaLanguage style={{ marginRight: '6px' }} /> Translate
-            </button>
+            {!isTranslated ? (
+              <button onClick={handleTranslate} className="transcriber-button">
+                <FaLanguage style={{ marginRight: '6px' }} /> Translate to Hindi
+              </button>
+            ) : (
+              <button onClick={handleRevert} className="transcriber-button">
+                <FaUndo style={{ marginRight: '6px' }} /> Revert to English
+              </button>
+            )}
           </div>
         </>
       )}
     </div>
   );
-};
-
-const styles = {
-  container: {
-    maxWidth: '600px',
-    margin: '2rem auto',
-    padding: '1.5rem',
-    background: 'linear-gradient(135deg, #5e35b1, #7e57c2)',
-    borderRadius: '16px',
-    color: 'white',
-    textAlign: 'center',
-    fontFamily: 'sans-serif',
-  },
-  heading: {
-    marginBottom: '1rem',
-  },
-  fileInput: {
-    margin: '1rem 0',
-  },
-  button: {
-    background: '#9575cd',
-    border: 'none',
-    padding: '0.6rem 1.2rem',
-    borderRadius: '8px',
-    color: 'white',
-    fontWeight: 'bold',
-    cursor: 'pointer',
-    margin: '0.5rem',
-  },
-  loader: {
-    margin: '1rem',
-    fontSize: '1rem',
-  },
-  textarea: {
-    width: '100%',
-    padding: '1rem',
-    borderRadius: '8px',
-    border: 'none',
-    marginTop: '1rem',
-    fontSize: '1rem',
-  },
-  buttonGroup: {
-    marginTop: '1rem',
-  },
 };
 
 export default DocumentTranscriber;

@@ -1,0 +1,83 @@
+/* documentTranscriber.css */
+
+.transcriber-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #563b66, #8d37a5);
+  border-radius: 16px;
+  color: white;
+  text-align: center;
+  font-family: sans-serif;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.transcriber-heading {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.transcriber-file-input {
+  margin: 1rem 0;
+}
+
+.transcriber-button {
+  background: #9575cd;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 0.5rem;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.transcriber-button:hover {
+  background: #b39ddb;
+  transform: translateY(-2px);
+}
+
+.transcriber-loader {
+  margin: 1rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.transcriber-textarea {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 8px;
+  border: none;
+  margin-top: 1rem;
+  font-size: 1rem;
+  resize: vertical;
+  background: white;
+  color: #333;
+}
+
+.transcriber-button-group {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .transcriber-container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+}
