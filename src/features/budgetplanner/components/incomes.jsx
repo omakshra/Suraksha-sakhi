@@ -94,20 +94,31 @@ function Incomes() {
   const [incomesPerPage] = useState(5);
   const [category, setCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [insights, setInsights] = useState([]);
 
-  const categories = ["Salary", "Freelance", "Investment", "Other"];
+  const categories = [
+  "Salary / Job",
+  "Freelance / Home Business",
+  "Family Support",
+  "Government Schemes",
+  "Investments",
+  "Side Hustles",
+];
 
+
+  // 🔁 Load incomes from Firebase on mount
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "incomes"), (snapshot) => {
-      const loaded = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setIncomes(loaded);
-    });
+  const unsubscribe = onSnapshot(collection(db, "incomes"), (snapshot) => {
+    const loaded = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setIncomes(loaded);
+  });
 
-    return () => unsubscribe();
-  }, []);
+  return () => unsubscribe();
+}, []);
+
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(incomes);
@@ -128,16 +139,16 @@ function Incomes() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!name || !amount || !date || !description || !category) {
-      alert(t.error);
-      return;
-    }
+  e.preventDefault();
+  if (!name || !amount || !date || !description || !category) {
+    alert("All fields are required.");
+    return;
+  }
 
-    const confirmAction = window.confirm(
-      editing ? t.updateConfirm : t.addConfirm
-    );
-    if (!confirmAction) return;
+  const confirmAction = window.confirm(
+    editing ? "Update this income?" : "Add new income?"
+  );
+  if (!confirmAction) return;
 
     const incomeData = {
       name,
@@ -174,8 +185,8 @@ function Incomes() {
   };
 
   const handleRemove = async (id) => {
-    const confirmDelete = window.confirm(t.deleteConfirm);
-    if (!confirmDelete) return;
+  const confirmDelete = window.confirm("Delete this income?");
+  if (!confirmDelete) return;
 
     try {
       const incomeDocRef = doc(db, "incomes", id);
@@ -229,7 +240,11 @@ function Incomes() {
 
   const chartOptions = {
     scales: {
-      x: { type: "time", time: { unit: "day" }, title: { display: true, text: "Date" } },
+      x: {
+        type: "time",
+        time: { unit: "day" },
+        title: { display: true, text: "Date" },
+      },
       y: { title: { display: true, text: "Income (₹)" } },
     },
   };
@@ -244,6 +259,18 @@ function Incomes() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </InputGroup>
+
+      {insights.length > 0 && (
+        <Card className="mb-3 bg-light p-3">
+          <h5>💡 AI Insights</h5>
+          <ul style={{ textAlign: "left", paddingLeft: "20px" }}>
+            {insights.map((tip, i) => (
+            <li key={i}>{tip}</li>
+            ))}
+        </ul>
+
+        </Card>
+      )}
 
       <Row>
         <Col md={6}>
@@ -341,7 +368,7 @@ function Incomes() {
                   <FontAwesomeIcon icon={faPenToSquare} /> {t.edit}
                 </Button>
                 <Button variant="danger" size="sm" onClick={() => handleRemove(income.id)}>
-                  <FontAwesomeIcon icon={faTrashCan} /> {t.remove}
+                  <FontAwesomeIcon icon={faTrashCan} /> Remove
                 </Button>
               </div>
             </div>
