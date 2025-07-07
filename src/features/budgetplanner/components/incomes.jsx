@@ -97,28 +97,64 @@ function Incomes() {
   const [insights, setInsights] = useState([]);
 
   const categories = [
-  "Salary / Job",
-  "Freelance / Home Business",
-  "Family Support",
-  "Government Schemes",
-  "Investments",
-  "Side Hustles",
-];
+    "Salary / Job",
+    "Freelance / Home Business",
+    "Family Support",
+    "Government Schemes",
+    "Investments",
+    "Side Hustles",
+  ];
 
-
-  // 🔁 Load incomes from Firebase on mount
   useEffect(() => {
-  const unsubscribe = onSnapshot(collection(db, "incomes"), (snapshot) => {
-    const loaded = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setIncomes(loaded);
-  });
+    const unsubscribe = onSnapshot(collection(db, "incomes"), (snapshot) => {
+      const loaded = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setIncomes(loaded);
+    });
+    return () => unsubscribe();
+  }, []);
 
-  return () => unsubscribe();
-}, []);
+  // AI Insights Logic
+  useEffect(() => {
+    if (!incomes.length) return;
 
+    const categoryTotals = {};
+    incomes.forEach((inc) => {
+      const cat = inc.category || "Uncategorized";
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + parseFloat(inc.amount);
+    });
+
+    const total = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+    const sorted = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+    const aiTips = [];
+
+    if (sorted.length) {
+      const [topCat, topAmt] = sorted[0];
+      aiTips.push(`💰 Top income source: "${topCat}" with ₹${topAmt.toFixed(2)}.`);
+    }
+
+    sorted.forEach(([cat, amt]) => {
+  const contribution = amt / total;
+  if (contribution < 0.1) {
+    const targetAmount = total * 0.1;
+    const neededGrowth = targetAmount - amt;
+    aiTips.push(
+      `⚠️ "${cat}" is contributing only ₹${amt.toFixed(2)}. Try increasing it by ₹${neededGrowth.toFixed(2)} to reach 10% of your total income.`
+    );
+  }
+});
+
+
+    if (sorted[0][1] / total > 0.8) {
+      aiTips.push("🔴 Warning: You're relying heavily on one income source. Consider diversifying.");
+    } else {
+      aiTips.push("✅ Good job! You have a well-balanced income portfolio.");
+    }
+
+    setInsights(aiTips);
+  }, [incomes]);
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(incomes);
@@ -140,6 +176,7 @@ function Incomes() {
 
   const handleSubmit = async (e) => {
   e.preventDefault();
+
   if (!name || !amount || !date || !description || !category) {
     alert("All fields are required.");
     return;
@@ -150,28 +187,29 @@ function Incomes() {
   );
   if (!confirmAction) return;
 
-    const incomeData = {
-      name,
-      amount: parseFloat(amount),
-      date,
-      description,
-      status: isPaid ? "PAID" : "DUE",
-      category,
-    };
-
-    try {
-      if (editing && currentIncome) {
-        const incomeDocRef = doc(db, "incomes", currentIncome.id);
-        await updateDoc(incomeDocRef, incomeData);
-      } else {
-        await addDoc(collection(db, "incomes"), incomeData);
-      }
-      resetForm();
-    } catch (error) {
-      console.error("Error saving income:", error);
-      alert("Error saving income. Check console for details.");
-    }
+  const incomeData = {
+    name,
+    amount: parseFloat(amount),
+    date,
+    description,
+    status: isPaid ? "PAID" : "DUE",
+    category,
   };
+
+  try {
+    if (editing && currentIncome) {
+      const incomeDocRef = doc(db, "incomes", currentIncome.id);
+      await updateDoc(incomeDocRef, incomeData);
+    } else {
+      await addDoc(collection(db, "incomes"), incomeData);
+    }
+    resetForm();
+  } catch (error) {
+    console.error("Error saving income:", error);
+    alert("Error saving income. Check console for details.");
+  }
+};
+
 
   const resetForm = () => {
     setName("");
@@ -367,7 +405,11 @@ function Incomes() {
                 <Button size="sm" className="me-2" onClick={() => handleEdit(income)}>
                   <FontAwesomeIcon icon={faPenToSquare} /> {t.edit}
                 </Button>
-                <Button variant="danger" size="sm" onClick={() => handleRemove(income.id)}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleRemove(income.id)}
+                >
                   <FontAwesomeIcon icon={faTrashCan} /> Remove
                 </Button>
               </div>
