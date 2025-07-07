@@ -95,10 +95,7 @@ function Incomes() {
   const [category, setCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const categories =
-    selectedLanguage === "hi"
-      ? ["वेतन", "फ्रीलांस", "निवेश", "अन्य"]
-      : ["Salary", "Freelance", "Investment", "Other"];
+  const categories = ["Salary", "Freelance", "Investment", "Other"];
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "incomes"), (snapshot) => {

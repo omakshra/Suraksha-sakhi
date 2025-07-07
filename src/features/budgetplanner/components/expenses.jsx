@@ -83,7 +83,14 @@ function Expenses() {
     allFieldsRequired: lang === "hi" ? "सभी फ़ील्ड आवश्यक हैं।" : "All fields are required."
   };
 
-  const categories = ["Utility", "Rent", "Groceries", "Entertainment", "Other"];
+  const categories = [
+  "Groceries & Essentials",
+  "Childcare & Family Support",
+  "Home & Rent",
+  "Education & Career",
+  "Health & Medical",
+  "Personal Care",
+];
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "expenses"), (snapshot) => {
