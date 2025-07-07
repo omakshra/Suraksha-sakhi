@@ -24,17 +24,64 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 
-import { db } from "../../../utils/firebase"; // 🔁 Adjust path as needed
-import { 
-  collection, 
-  addDoc, 
-  getDocs, 
-  onSnapshot, 
-  doc, 
-  updateDoc, 
-  deleteDoc 
+import { db } from "../../../utils/firebase";
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
+
 function Incomes() {
+  const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+
+  const labels = {
+    en: {
+      heading: "Incomes",
+      total: "Total Income",
+      name: "Name",
+      description: "Description",
+      amount: "Amount",
+      date: "Date",
+      category: "Category",
+      select: "Select",
+      add: "Add Income",
+      update: "Update Income",
+      export: "Export to Excel",
+      search: "Search incomes...",
+      edit: "Edit",
+      remove: "Remove",
+      deleteConfirm: "Delete this income?",
+      updateConfirm: "Update this income?",
+      addConfirm: "Add new income?",
+      error: "All fields are required.",
+    },
+    hi: {
+      heading: "आय",
+      total: "कुल आय",
+      name: "नाम",
+      description: "विवरण",
+      amount: "राशि",
+      date: "तारीख",
+      category: "श्रेणी",
+      select: "चुनें",
+      add: "आय जोड़ें",
+      update: "आय अपडेट करें",
+      export: "एक्सेल में निर्यात करें",
+      search: "आय खोजें...",
+      edit: "संपादित करें",
+      remove: "हटाएं",
+      deleteConfirm: "क्या आप इस आय को हटाना चाहते हैं?",
+      updateConfirm: "क्या आप इस आय को अपडेट करना चाहते हैं?",
+      addConfirm: "नई आय जोड़ना चाहते हैं?",
+      error: "सभी फ़ील्ड आवश्यक हैं।",
+    }
+  };
+
+  const t = labels[selectedLanguage];
+
   const [incomes, setIncomes] = useState([]);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -47,22 +94,67 @@ function Incomes() {
   const [incomesPerPage] = useState(5);
   const [category, setCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [insights, setInsights] = useState([]);
 
-  const categories = ["Salary", "Freelance", "Investment", "Other"];
+  const categories = [
+    "Salary / Job",
+    "Freelance / Home Business",
+    "Family Support",
+    "Government Schemes",
+    "Investments",
+    "Side Hustles",
+  ];
 
-  // 🔁 Load incomes from Firebase on mount
   useEffect(() => {
-  const unsubscribe = onSnapshot(collection(db, "incomes"), (snapshot) => {
-    const loaded = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setIncomes(loaded);
-  });
+    const unsubscribe = onSnapshot(collection(db, "incomes"), (snapshot) => {
+      const loaded = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setIncomes(loaded);
+    });
+    return () => unsubscribe();
+  }, []);
 
-  return () => unsubscribe();
-}, []);
+  // AI Insights Logic
+  useEffect(() => {
+    if (!incomes.length) return;
 
+    const categoryTotals = {};
+    incomes.forEach((inc) => {
+      const cat = inc.category || "Uncategorized";
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + parseFloat(inc.amount);
+    });
+
+    const total = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+    const sorted = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+    const aiTips = [];
+
+    if (sorted.length) {
+      const [topCat, topAmt] = sorted[0];
+      aiTips.push(`💰 Top income source: "${topCat}" with ₹${topAmt.toFixed(2)}.`);
+    }
+
+    sorted.forEach(([cat, amt]) => {
+  const contribution = amt / total;
+  if (contribution < 0.1) {
+    const targetAmount = total * 0.1;
+    const neededGrowth = targetAmount - amt;
+    aiTips.push(
+      `⚠️ "${cat}" is contributing only ₹${amt.toFixed(2)}. Try increasing it by ₹${neededGrowth.toFixed(2)} to reach 10% of your total income.`
+    );
+  }
+});
+
+
+    if (sorted[0][1] / total > 0.8) {
+      aiTips.push("🔴 Warning: You're relying heavily on one income source. Consider diversifying.");
+    } else {
+      aiTips.push("✅ Good job! You have a well-balanced income portfolio.");
+    }
+
+    setInsights(aiTips);
+  }, [incomes]);
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(incomes);
@@ -84,6 +176,7 @@ function Incomes() {
 
   const handleSubmit = async (e) => {
   e.preventDefault();
+
   if (!name || !amount || !date || !description || !category) {
     alert("All fields are required.");
     return;
@@ -117,6 +210,7 @@ function Incomes() {
   }
 };
 
+
   const resetForm = () => {
     setName("");
     setAmount("");
@@ -132,15 +226,14 @@ function Incomes() {
   const confirmDelete = window.confirm("Delete this income?");
   if (!confirmDelete) return;
 
-  try {
-    const incomeDocRef = doc(db, "incomes", id);
-    await deleteDoc(incomeDocRef);
-  } catch (error) {
-    console.error("Error deleting income:", error);
-    alert("Error deleting income. Check console for details.");
-  }
-};
-
+    try {
+      const incomeDocRef = doc(db, "incomes", id);
+      await deleteDoc(incomeDocRef);
+    } catch (error) {
+      console.error("Error deleting income:", error);
+      alert("Error deleting income. Check console for details.");
+    }
+  };
 
   const totalIncome = incomes.reduce(
     (total, income) => total + parseFloat(income.amount || 0),
@@ -174,7 +267,7 @@ function Incomes() {
     labels: incomes.map((i) => new Date(i.date)),
     datasets: [
       {
-        label: "Total Income",
+        label: t.total,
         data: incomes.map((i) => i.amount),
         backgroundColor: "rgba(75,192,192,0.2)",
         borderColor: "rgba(75,192,192,1)",
@@ -185,27 +278,43 @@ function Incomes() {
 
   const chartOptions = {
     scales: {
-      x: { type: "time", time: { unit: "day" }, title: { display: true, text: "Date" } },
+      x: {
+        type: "time",
+        time: { unit: "day" },
+        title: { display: true, text: "Date" },
+      },
       y: { title: { display: true, text: "Income (₹)" } },
     },
   };
 
   return (
     <Container className="income-container">
-      <h2 className="mb-3">Incomes</h2>
+      <h2 className="mb-3">{t.heading}</h2>
 
       <InputGroup className="mb-3">
         <FormControl
-          placeholder="Search incomes..."
+          placeholder={t.search}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </InputGroup>
+
+      {insights.length > 0 && (
+        <Card className="mb-3 bg-light p-3">
+          <h5>💡 AI Insights</h5>
+          <ul style={{ textAlign: "left", paddingLeft: "20px" }}>
+            {insights.map((tip, i) => (
+            <li key={i}>{tip}</li>
+            ))}
+        </ul>
+
+        </Card>
+      )}
 
       <Row>
         <Col md={6}>
           <Card className="mt-3">
             <Card.Body>
-              <Card.Title>Total Income</Card.Title>
+              <Card.Title>{t.total}</Card.Title>
               <Card.Text>Total: ₹{totalIncome.toFixed(2)}</Card.Text>
             </Card.Body>
           </Card>
@@ -221,7 +330,7 @@ function Incomes() {
         <Row>
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Name</Form.Label>
+              <Form.Label>{t.name}</Form.Label>
               <Form.Control
                 type="text"
                 value={name}
@@ -232,7 +341,7 @@ function Incomes() {
           </Col>
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Description</Form.Label>
+              <Form.Label>{t.description}</Form.Label>
               <Form.Control
                 type="text"
                 value={description}
@@ -243,7 +352,7 @@ function Incomes() {
           </Col>
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Amount</Form.Label>
+              <Form.Label>{t.amount}</Form.Label>
               <Form.Control
                 type="number"
                 value={amount}
@@ -253,10 +362,11 @@ function Incomes() {
             </Form.Group>
           </Col>
         </Row>
+
         <Row className="mt-3">
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Date</Form.Label>
+              <Form.Label>{t.date}</Form.Label>
               <Form.Control
                 type="date"
                 value={date}
@@ -267,24 +377,19 @@ function Incomes() {
           </Col>
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Category</Form.Label>
-              <Form.Select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              >
-                <option value="">Select</option>
+              <Form.Label>{t.category}</Form.Label>
+              <Form.Select value={category} onChange={(e) => setCategory(e.target.value)}>
+                <option value="">{t.select}</option>
                 {categories.map((cat, idx) => (
-                  <option key={idx} value={cat}>
-                    {cat}
-                  </option>
+                  <option key={idx} value={cat}>{cat}</option>
                 ))}
               </Form.Select>
             </Form.Group>
           </Col>
         </Row>
+
         <Button type="submit" className="mt-3">
-          {editing ? "Update" : "Add Income"}{" "}
-          <FontAwesomeIcon icon={faPlusCircle} className="ms-2" />
+          {editing ? t.update : t.add} <FontAwesomeIcon icon={faPlusCircle} className="ms-2" />
         </Button>
       </Form>
 
@@ -298,9 +403,13 @@ function Incomes() {
               </span>
               <div>
                 <Button size="sm" className="me-2" onClick={() => handleEdit(income)}>
-                  <FontAwesomeIcon icon={faPenToSquare} /> Edit
+                  <FontAwesomeIcon icon={faPenToSquare} /> {t.edit}
                 </Button>
-                <Button variant="danger" size="sm" onClick={() => handleRemove(income.id)}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleRemove(income.id)}
+                >
                   <FontAwesomeIcon icon={faTrashCan} /> Remove
                 </Button>
               </div>
@@ -310,7 +419,7 @@ function Incomes() {
       </ListGroup>
 
       <Button onClick={exportToExcel} className="mt-3">
-        <FontAwesomeIcon icon={faFileExcel} className="me-2" /> Export to Excel
+        <FontAwesomeIcon icon={faFileExcel} className="me-2" /> {t.export}
       </Button>
 
       <div className="d-flex justify-content-between mt-3">

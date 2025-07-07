@@ -51,10 +51,47 @@ function Expenses() {
   const [searchQuery, setSearchQuery] = useState("");
   const [startMonth, setStartMonth] = useState("");
   const [endMonth, setEndMonth] = useState("");
+  const [lang, setLang] = useState(localStorage.getItem("selectedLanguage") || "en");
 
-  const categories = ["Utility", "Rent", "Groceries", "Entertainment", "Other"];
+  // ✅ Corrected: Detect localStorage changes using the correct key
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newLang = localStorage.getItem("selectedLanguage") || "en";
+      setLang((prev) => (prev !== newLang ? newLang : prev));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
-  // Fetch expenses in real-time from Firestore
+  const t = {
+    title: lang === "hi" ? "खर्च ट्रैकर" : "Expense Tracker",
+    name: lang === "hi" ? "नाम" : "Name",
+    desc: lang === "hi" ? "विवरण" : "Description",
+    amount: lang === "hi" ? "राशि (₹)" : "Amount (₹)",
+    date: lang === "hi" ? "तारीख" : "Date",
+    category: lang === "hi" ? "श्रेणी" : "Category",
+    paid: lang === "hi" ? "भुगतान किया गया" : "Paid",
+    add: lang === "hi" ? "खर्च जोड़ें" : "Add Expense",
+    update: lang === "hi" ? "अपडेट करें" : "Update Expense",
+    total: lang === "hi" ? "कुल खर्च" : "Total Expenses",
+    search: lang === "hi" ? "खर्च खोजें..." : "Search expenses...",
+    startMonth: lang === "hi" ? "प्रारंभ माह" : "Start Month",
+    endMonth: lang === "hi" ? "अंत माह" : "End Month",
+    export: lang === "hi" ? "एक्सेल में निर्यात करें" : "Export to Excel",
+    confirmAdd: lang === "hi" ? "इस खर्च को जोड़ें?" : "Add this expense?",
+    confirmUpdate: lang === "hi" ? "इस खर्च को अपडेट करें?" : "Update this expense?",
+    confirmDelete: lang === "hi" ? "इस खर्च को हटाएं?" : "Remove this expense?",
+    allFieldsRequired: lang === "hi" ? "सभी फ़ील्ड आवश्यक हैं।" : "All fields are required."
+  };
+
+  const categories = [
+  "Groceries & Essentials",
+  "Childcare & Family Support",
+  "Home & Rent",
+  "Education & Career",
+  "Health & Medical",
+  "Personal Care",
+];
+
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "expenses"), (snapshot) => {
       const loadedExpenses = snapshot.docs.map((doc) => ({
@@ -87,13 +124,11 @@ function Expenses() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name || !amount || !date || !description || !category) {
-      alert("All fields are required, including the category.");
+      alert(t.allFieldsRequired);
       return;
     }
 
-    const isConfirmed = window.confirm(
-      editing ? "Update this expense?" : "Add this expense?"
-    );
+    const isConfirmed = window.confirm(editing ? t.confirmUpdate : t.confirmAdd);
     if (!isConfirmed) return;
 
     const expenseData = {
@@ -131,7 +166,7 @@ function Expenses() {
   };
 
   const handleRemove = async (id) => {
-    const confirmDelete = window.confirm("Remove this expense?");
+    const confirmDelete = window.confirm(t.confirmDelete);
     if (!confirmDelete) return;
 
     try {
@@ -182,7 +217,7 @@ function Expenses() {
     labels: filteredMonthlyExpenses.map((e) => e.date),
     datasets: [
       {
-        label: "Expenses (Filtered by Month)",
+        label: t.title,
         data: filteredMonthlyExpenses.map((e) => e.amount),
         borderColor: "rgba(255, 99, 132, 1)",
         backgroundColor: "rgba(255, 99, 132, 0.2)",
@@ -197,29 +232,27 @@ function Expenses() {
       x: {
         type: "time",
         time: { unit: "day" },
-        title: { display: true, text: "Date" },
+        title: { display: true, text: t.date },
       },
       y: {
-        title: { display: true, text: "Amount (₹)" },
+        title: { display: true, text: t.amount },
       },
     },
   };
 
   return (
     <Container className="expense-container">
-      <h3 className="mb-4">Expense Tracker</h3>
-
+      <h3 className="mb-4">{t.title}</h3>
       <InputGroup className="mb-3">
         <FormControl
-          placeholder="Search expenses..."
+          placeholder={t.search}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </InputGroup>
-
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>Start Month</Form.Label>
+            <Form.Label>{t.startMonth}</Form.Label>
             <Form.Control
               type="month"
               value={startMonth}
@@ -229,7 +262,7 @@ function Expenses() {
         </Col>
         <Col md={6}>
           <Form.Group className="mb-3">
-            <Form.Label>End Month</Form.Label>
+            <Form.Label>{t.endMonth}</Form.Label>
             <Form.Control
               type="month"
               value={endMonth}
@@ -238,7 +271,6 @@ function Expenses() {
           </Form.Group>
         </Col>
       </Row>
-
       <Row>
         <Col md={6}>
           <motion.div
@@ -248,7 +280,7 @@ function Expenses() {
           >
             <Card>
               <Card.Body>
-                <Card.Title>Total Expenses</Card.Title>
+                <Card.Title>{t.total}</Card.Title>
                 <Card.Text>
                   ₹{Number(totalExpense).toLocaleString("en-IN", {
                     minimumFractionDigits: 2,
@@ -264,32 +296,31 @@ function Expenses() {
           </div>
         </Col>
       </Row>
-
       <Form onSubmit={handleSubmit} className="mt-4">
         <Row className="mb-3">
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Name</Form.Label>
+              <Form.Label>{t.name}</Form.Label>
               <Form.Control
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Expense Name"
+                placeholder={t.name}
               />
             </Form.Group>
           </Col>
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Description</Form.Label>
+              <Form.Label>{t.desc}</Form.Label>
               <Form.Control
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description"
+                placeholder={t.desc}
               />
             </Form.Group>
           </Col>
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Amount (₹)</Form.Label>
+              <Form.Label>{t.amount}</Form.Label>
               <Form.Control
                 type="number"
                 value={amount}
@@ -298,11 +329,10 @@ function Expenses() {
             </Form.Group>
           </Col>
         </Row>
-
         <Row className="mb-3">
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Date</Form.Label>
+              <Form.Label>{t.date}</Form.Label>
               <Form.Control
                 type="date"
                 value={date}
@@ -312,7 +342,7 @@ function Expenses() {
           </Col>
           <Col md={4}>
             <Form.Group>
-              <Form.Label>Category</Form.Label>
+              <Form.Label>{t.category}</Form.Label>
               <Form.Select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -329,22 +359,23 @@ function Expenses() {
           <Col md={4} className="d-flex align-items-center">
             <Form.Check
               type="checkbox"
-              label="Paid"
+              label={t.paid}
               checked={isPaid}
               onChange={(e) => setIsPaid(e.target.checked)}
             />
           </Col>
         </Row>
-
         <Button type="submit" className="mb-3">
-          {editing ? "Update Expense" : "Add Expense"}{" "}
+          {editing ? t.update : t.add}{" "}
           <FontAwesomeIcon icon={faPlusCircle} className="ms-2" />
         </Button>
       </Form>
-
       <ListGroup className="mt-3">
         {currentExpenses.map((exp) => (
-          <ListGroup.Item key={exp.id}>
+          <ListGroup.Item
+            key={exp.id}
+            className="d-flex justify-content-between align-items-center"
+          >
             <div>
               <strong>{exp.name}</strong> — ₹
               {Number(exp.amount).toLocaleString("en-IN", {
@@ -354,12 +385,8 @@ function Expenses() {
               <br />
               {exp.description} | {exp.category} | {exp.status}
             </div>
-            <div className="mt-2">
-              <Button
-                size="sm"
-                className="me-2"
-                onClick={() => handleEdit(exp)}
-              >
+            <div className="button-group">
+              <Button size="sm" className="me-2" onClick={() => handleEdit(exp)}>
                 <FontAwesomeIcon icon={faPenToSquare} /> Edit
               </Button>
               <Button
@@ -373,11 +400,9 @@ function Expenses() {
           </ListGroup.Item>
         ))}
       </ListGroup>
-
       <Button onClick={exportToExcel} className="mt-3">
-        <FontAwesomeIcon icon={faFileExcel} className="me-2" /> Export to Excel
+        <FontAwesomeIcon icon={faFileExcel} className="me-2" /> {t.export}
       </Button>
-
       <div className="d-flex justify-content-between mt-3">
         <Button onClick={handlePreviousPage} disabled={currentPage === 1}>
           <FontAwesomeIcon icon={faArrowCircleLeft} />
