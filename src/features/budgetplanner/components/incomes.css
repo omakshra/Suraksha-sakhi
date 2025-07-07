@@ -134,3 +134,13 @@
     margin-top: 1rem;
   }
 }
+.ai-insights-list {
+  text-align: left;
+  padding-left: 0;
+  list-style-type: none; /* 🚫 No bullets */
+  margin: 0;
+}
+
+.ai-insights-list li {
+  margin-bottom: 8px;
+}
