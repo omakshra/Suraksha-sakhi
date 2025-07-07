@@ -1,5 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap");
 
+:root {
+  --primary-color: #8f59b1;
+  --hover-color: #4a148c;
+  --secondary-color: #ba68c8;
+  --accent-color: #f5e9f7;
+  --accent-hover: #f3d9fa;
+  --link: #6a1b9a;
+}
+
 .expense-container {
   background: var(--accent-color);
   padding: 2rem;
@@ -7,6 +16,7 @@
   max-width: 1000px;
   margin: 2rem auto;
   box-shadow: 0 4px 12px rgba(106, 27, 154, 0.1);
+  font-family: 'Inter', sans-serif;
 }
 
 .expense-container h3 {
@@ -16,29 +26,36 @@
   text-align: center;
 }
 
-/* Filter and Search Inputs */
+/* Filter & Form Labels */
 .expense-container .filter-section {
   margin-bottom: 1rem;
 }
 
 .expense-container .form-label {
-  color: var(--primary-color);
-  font-weight: 600;
+  color: var(--link);
+  font-weight: 500;
 }
 
+/* Form Inputs */
 .expense-container .form-control,
 .expense-container .form-select {
   border-radius: 10px;
   border: 1px solid var(--secondary-color);
 }
 
-/* Cards and Total Display */
+.expense-container .form-control:focus,
+.expense-container .form-select:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 0.2rem rgba(186, 104, 200, 0.25);
+}
+
+/* Cards */
 .expense-container .card {
   border: none;
   background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
   color: #4a148c;
   border-radius: 12px;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .expense-container .card-title {
@@ -51,24 +68,13 @@
   font-weight: bold;
 }
 
-/* Chart Styling */
+/* Chart Container */
 .expense-container .chart-container {
   background: white;
   padding: 1rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(106, 27, 154, 0.08);
-}
-
-/* Expense Form */
-.expense-container form .form-label {
-  color: var(--link);
-  font-weight: 500;
-}
-
-.expense-container form .form-control:focus,
-.expense-container form .form-select:focus {
-  border-color: var(--secondary-color);
-  box-shadow: 0 0 0 0.2rem rgba(186, 104, 200, 0.25);
+  margin-top: 1rem;
 }
 
 /* Buttons */
@@ -100,11 +106,19 @@
   border-color: #ad1457;
 }
 
+/* Right-aligned Buttons */
+.expense-container .button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
 /* List Items */
 .expense-container .list-group-item {
   border-radius: 10px;
   margin-bottom: 10px;
-  background: #f8bbd0;
+  background: #e1bee7;
   color: #4a148c;
   border: none;
   box-shadow: 0 2px 4px rgba(106, 27, 154, 0.1);
@@ -117,7 +131,7 @@
   margin-top: 1rem;
 }
 
-/* Responsive Tweaks */
+/* Responsive */
 @media (max-width: 768px) {
   .expense-container {
     padding: 1rem;
@@ -126,4 +140,13 @@
   .expense-container .chart-container {
     margin-top: 1rem;
   }
+}
+.expense-container .button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+.expense-container .button-group {
+  display: flex;
+  gap: 0.5rem;
 }
