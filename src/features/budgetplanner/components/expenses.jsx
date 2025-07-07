@@ -52,7 +52,14 @@ function Expenses() {
   const [startMonth, setStartMonth] = useState("");
   const [endMonth, setEndMonth] = useState("");
 
-  const categories = ["Utility", "Rent", "Groceries", "Entertainment", "Other"];
+  const categories = [
+  "Groceries & Essentials",
+  "Childcare & Family Support",
+  "Home & Rent",
+  "Education & Career",
+  "Health & Medical",
+  "Personal Care",
+];
 
   // Fetch expenses in real-time from Firestore
   useEffect(() => {

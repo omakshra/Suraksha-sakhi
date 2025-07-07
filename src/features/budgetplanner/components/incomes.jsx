@@ -48,7 +48,15 @@ function Incomes() {
   const [category, setCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const categories = ["Salary", "Freelance", "Investment", "Other"];
+  const categories = [
+  "Salary / Job",
+  "Freelance / Home Business",
+  "Family Support",
+  "Government Schemes",
+  "Investments",
+  "Side Hustles",
+];
+
 
   // 🔁 Load incomes from Firebase on mount
   useEffect(() => {
