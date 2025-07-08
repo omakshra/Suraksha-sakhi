@@ -424,10 +424,20 @@ useEffect(() => {
   return (
     <Container className="expense-container">
       <h3 className="mb-4">{t.title}</h3>
-      <HindiKeyboardInput
-  value={searchQuery}
-  setValue={setSearchQuery}
-/>
+      <div className="mb-3">
+  {lang === "hi" ? (
+    <HindiKeyboardInput value={searchQuery} setValue={setSearchQuery} />
+  ) : (
+    <FormControl
+      className="search-input-purple"
+      placeholder={t.search}
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+    />
+  )}
+</div>
+
+
 
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
@@ -567,20 +577,24 @@ useEffect(() => {
           <Col md={4}>
             <Form.Group>
               <Form.Label>{t.name}</Form.Label>
-              <HindiKeyboardInput
-  value={name}
-  setValue={setName}
-/>
+              {lang === "hi" ? (
+  <HindiKeyboardInput value={name} setValue={setName} />
+) : (
+  <Form.Control value={name} onChange={(e) => setName(e.target.value)} />
+)}
+
 
             </Form.Group>
           </Col>
           <Col md={4}>
             <Form.Group>
               <Form.Label>{t.desc}</Form.Label>
-              <HindiKeyboardInput
-  value={description}
-  setValue={setDescription}
-/>
+              {lang === "hi" ? (
+  <HindiKeyboardInput value={description} setValue={setDescription} />
+) : (
+  <Form.Control value={description} onChange={(e) => setDescription(e.target.value)} />
+)}
+
 
             </Form.Group>
           </Col>
