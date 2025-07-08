@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import Tesseract from 'tesseract.js';
 import {
-  FaUpload, FaCopy, FaLanguage, FaSpinner, FaUndo, FaTrash,
+  FaCopy, FaLanguage, FaSpinner, FaUndo, FaTrash,
   FaFilePdf, FaVolumeUp, FaStop, FaWhatsapp, FaMagic
 } from 'react-icons/fa';
 import './documenttranscriber.css';
 import { translateTextWithHF } from '../../utils/huggingfaceapi';
 import jsPDF from 'jspdf';
 import useTextToSpeech from '../../utils/useTextToSpeech';
+import { summarizeTextWithHF } from '../../utils/summarizewithHF';
+import GlossaryCard from './glossarycard';
+import RightsCard from './rightscard';
+import { sendTextToChatbotForSummary } from "./sendtexttochatbot"; // adjust path if needed
+
 
 const DocumentTranscriber = ({ selectedLanguage }) => {
   const [labels, setLabels] = useState({
     heading: "📄 AI-Powered Document Transcriber",
-    extractBtn: "Extract Text",
     translateBtn: "Translate to Hindi",
     revertBtn: "Revert to English",
     copyAlert: "Text copied to clipboard!",
@@ -28,15 +32,32 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
     simplifyText: "✨ Simplify Text",
     revertSimplify: "↩️ Revert Simplify",
     copy: "Copy",
+    showAdvanced: "⚙️ Show Advanced",
+hideAdvanced: "⚙️ Hide Advanced",
 
   });
 
-  // ✅ Update labels dynamically based on language
+  const [image, setImage] = useState(null);
+  const [fileName, setFileName] = useState(labels.noFile);
+  const [extractedText, setExtractedText] = useState('');
+  const [translatedText, setTranslatedText] = useState('');
+  const [simplifiedText, setSimplifiedText] = useState('');
+  const [isTranslated, setIsTranslated] = useState(false);
+  const [isSimplified, setIsSimplified] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const { speak, stop, speaking } = useTextToSpeech();
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [simplifiedTextEn, setSimplifiedTextEn] = useState('');
+
+  useEffect(() => {
+    if (!image) setFileName(labels.noFile);
+  }, [labels]);
+
   useEffect(() => {
     if (selectedLanguage === "hi") {
       setLabels({
         heading: "📄 एआई-पावर्ड दस्तावेज़ ट्रांसक्राइबर",
-        extractBtn: "पाठ निकालें",
         translateBtn: "हिंदी में अनुवाद करें",
         revertBtn: "अंग्रेज़ी में वापस जाएं",
         copyAlert: "पाठ क्लिपबोर्ड में कॉपी हो गया!",
@@ -52,12 +73,13 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
         simplifyText: "✨ पाठ सरल करें",
         revertSimplify: "↩️ सरलता वापस लें",
         copy: "कॉपी करें",
+        showAdvanced: "⚙️ उन्नत विकल्प दिखाएं",
+hideAdvanced: "⚙️ उन्नत विकल्प छुपाएं",
 
       });
     } else {
       setLabels({
         heading: "📄 AI-Powered Document Transcriber",
-        extractBtn: "Extract Text",
         translateBtn: "Translate to Hindi",
         revertBtn: "Revert to English",
         copyAlert: "Text copied to clipboard!",
@@ -73,50 +95,22 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
         simplifyText: "✨ Simplify Text",
         revertSimplify: "↩️ Revert Simplify",
         copy: "Copy",
+        showAdvanced: "⚙️ Show Advanced",
+hideAdvanced: "⚙️ Hide Advanced",
+
       });
     }
   }, [selectedLanguage]);
 
-  const [image, setImage] = useState(null);
-  const [fileName, setFileName] = useState(labels.noFile);
-  const [extractedText, setExtractedText] = useState('');
-  const [translatedText, setTranslatedText] = useState('');
-  const [simplifiedText, setSimplifiedText] = useState('');
-  const [isTranslated, setIsTranslated] = useState(false);
-  const [isSimplified, setIsSimplified] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const { speak, stop, speaking } = useTextToSpeech();
-
-  // ✅ All your remaining logic remains unchanged (OCR, handleTranslate, etc.)
-
-  // ✅ Ensure `fileName` updates label correctly on language change:
-  useEffect(() => {
-    if (!image) {
-      setFileName(labels.noFile);
-    }
-  }, [labels]);
-
   const cleanExtractedText = (text) =>
-    text.replace(/-\n/g, '')
-      .replace(/\n{2,}/g, '\n')
-      .replace(/[ \t]+/g, ' ')
-      .trim();
-
-  const simplifyText = (text) => {
-    const skipWords = ["लेसर", "लेसोर", "lessor", "lessee", "borrower", "lender", "date", "signature"];
-    const lines = text.split('\n').map(line => line.trim()).filter(line =>
-      line.length > 10 &&
-      !skipWords.some(word => line.toLowerCase().includes(word))
-    );
-    return lines.join('\n\n');
-  };
+    text.replace(/-\n/g, '').replace(/\n{2,}/g, '\n').replace(/[ \t]+/g, ' ').trim();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setFileName(file.name);
       setImage(file);
+      handleOCR(file);
     } else {
       setFileName(labels.noFile);
     }
@@ -127,32 +121,15 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
     setIsTranslated(false);
   };
 
-  const handleClearFile = () => {
-    setImage(null);
-    setFileName(labels.noFile);
-    setExtractedText('');
-    setTranslatedText('');
-    setSimplifiedText('');
-    setIsSimplified(false);
-    setIsTranslated(false);
-    setProgress(0);
-  };
-
-  const handleOCR = () => {
-    if (!image) return;
+  const handleOCR = (file) => {
+    if (!file) return;
     setLoading(true);
     setProgress(0);
-
-    Tesseract.recognize(image, 'eng+hin', {
-      logger: (m) => {
-        if (m.status === 'recognizing text') {
-          setProgress(Math.floor(m.progress * 100));
-        }
-      },
+    Tesseract.recognize(file, 'eng+hin', {
+      logger: (m) => m.status === 'recognizing text' && setProgress(Math.floor(m.progress * 100)),
     })
       .then(({ data: { text } }) => {
-        const cleaned = cleanExtractedText(text);
-        setExtractedText(cleaned);
+        setExtractedText(cleanExtractedText(text));
         setLoading(false);
       })
       .catch((err) => {
@@ -162,55 +139,54 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
       });
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(
-      isSimplified ? simplifiedText :
-      translatedText || extractedText
-    );
-    alert(labels.copyAlert);
-  };
-
   const handleTranslate = async () => {
-  const baseText = isSimplified ? simplifiedText : extractedText;
-  if (!baseText) return;
-  setLoading(true);
-  setProgress(0);
+    const baseText = isSimplified ? simplifiedText : extractedText;
 
-  try {
-    const chunks = baseText.split(/\n+/).filter(line => line.trim() !== '');
-    const translatedChunks = [];
-
-    for (let i = 0; i < chunks.length; i++) {
-      const translated = await translateTextWithHF(chunks[i], "en", "hi");
-      translatedChunks.push(translated);
-      setProgress(Math.floor(((i + 1) / chunks.length) * 100));
+    if (!baseText.trim()) {
+        alert("No text available for translation.");
+        return;
     }
 
-    const finalTranslated = translatedChunks.join('\n\n');
-    setTranslatedText(finalTranslated);
-    setIsTranslated(true);
+    setLoading(true);
+    setProgress(0);
+    try {
+        const chunks = baseText.split(/\n+/).filter(line => line.trim() !== '');
+        const translatedChunks = [];
 
-    if (isSimplified) {
-      setSimplifiedText(simplifyText(finalTranslated));
+        for (let i = 0; i < chunks.length; i++) {
+            const translated = await translateTextWithHF(chunks[i], "en", "hi");
+            translatedChunks.push(translated);
+            setProgress(Math.floor(((i + 1) / chunks.length) * 100));
+        }
+
+        const finalTranslatedText = translatedChunks.join('\n\n');
+        setTranslatedText(finalTranslatedText);
+        setIsTranslated(true);
+
+        // ✅ Update simplifiedText if it was simplified so further actions use translated Hindi
+        if (isSimplified) {
+            setSimplifiedText(finalTranslatedText);
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Translation failed. Please try again.");
     }
-  } catch (error) {
-    console.error(error);
-    alert("Translation failed. Please try again.");
-  }
-  setLoading(false);
+    setLoading(false);
 };
 
   const handleRevert = () => {
-    setTranslatedText('');
-    setIsTranslated(false);
-    if (isSimplified) {
-      setSimplifiedText(simplifyText(extractedText));
-    }
-  };
+  setTranslatedText('');
+  setIsTranslated(false);
+  // If simplified, revert it to English simplified text
+  if (isSimplified && simplifiedTextEn) {
+    setSimplifiedText(simplifiedTextEn);
+  }
+};
+
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const content = isSimplified ? simplifiedText : translatedText || extractedText || "";
+    const content = isSimplified ? simplifiedText : translatedText || extractedText;
     const lines = doc.splitTextToSize(content, 180);
     doc.text(lines, 15, 20);
     doc.save('transcribed_document.pdf');
@@ -218,8 +194,7 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
 
   const handleReadAloud = () => {
     const textToRead = isSimplified ? simplifiedText : translatedText || extractedText;
-    const ttsLang = isTranslated ? "hi-IN" : "en-US";
-    speak(textToRead, ttsLang);
+    speak(textToRead, isTranslated ? "hi-IN" : "en-US");
   };
 
   const handleWhatsAppShare = () => {
@@ -227,49 +202,62 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
-  const handleSimplifyToggle = () => {
-    if (isSimplified) {
-      setSimplifiedText('');
-      setIsSimplified(false);
-    } else {
-      const baseText = translatedText || extractedText;
-      const simplified = simplifyText(baseText);
-      setSimplifiedText(simplified);
-      setIsSimplified(true);
-    }
+  const handleCopy = () => {
+    navigator.clipboard.writeText(isSimplified ? simplifiedText : translatedText || extractedText);
+    alert(labels.copyAlert);
   };
+const handleSimplifyToggle = async () => {
+    const baseText = extractedText;
+
+    if (isSimplified) {
+        // Revert
+        setSimplifiedText('');
+        setSimplifiedTextEn('');
+        setIsSimplified(false);
+    } else {
+        if (!baseText.trim()) {
+            alert("No text to summarize.");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const summary = await sendTextToChatbotForSummary(baseText);
+            setSimplifiedText(summary);
+            setSimplifiedTextEn(summary);
+            setIsSimplified(true);
+        } catch (error) {
+            console.error(error);
+            alert("Simplification failed. Please try again.");
+        }
+        setLoading(false);
+    }
+};
 
   return (
     <div className="transcriber-container">
       <h2 className="transcriber-heading">{labels.heading}</h2>
 
       <div className="transcriber-file-upload">
-        <input
-          type="file"
-          accept="image/*"
-          id="fileInput"
-          onChange={handleFileChange}
-          style={{ display: "none" }}
-        />
-        <label htmlFor="fileInput" className="transcriber-button">
-          {labels.chooseFile}
-        </label>
-        <button onClick={handleClearFile} className="transcriber-button">
-          <FaTrash style={{ marginRight: "6px" }} /> {labels.clearFile}
-        </button>
+        <input type="file" accept="image/*" id="fileInput" onChange={handleFileChange} style={{ display: "none" }} />
+        <label htmlFor="fileInput" className="transcriber-button">{labels.chooseFile}</label>
+        <button onClick={() => {
+          setImage(null);
+          setFileName(labels.noFile);
+          setExtractedText('');
+          setTranslatedText('');
+          setSimplifiedText('');
+          setIsSimplified(false);
+          setIsTranslated(false);
+          setProgress(0);
+        }} className="transcriber-button"><FaTrash style={{ marginRight: "6px" }} /> {labels.clearFile}</button>
         <span className="file-name">{fileName}</span>
       </div>
-
-      <button onClick={handleOCR} className="transcriber-button">
-        <FaUpload style={{ marginRight: "8px" }} /> {labels.extractBtn}
-      </button>
 
       {loading && (
         <div className="transcriber-loader">
           <FaSpinner className="spin" /> {labels.processing}
-          <div className="progress-bar">
-            <div className="progress-bar-fill" style={{ width: `${progress}%` }}></div>
-          </div>
+          <div className="progress-bar"><div className="progress-bar-fill" style={{ width: `${progress}%` }}></div></div>
         </div>
       )}
 
@@ -278,25 +266,18 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
           <textarea
             className="transcriber-textarea"
             rows="18"
-            value={
-              isSimplified ? simplifiedText :
-              translatedText || extractedText
-            }
+            value={isSimplified ? simplifiedText : translatedText || extractedText}
             onChange={(e) => {
-              if (isSimplified) {
-                setSimplifiedText(e.target.value);
-              } else if (isTranslated) {
-                setTranslatedText(e.target.value);
-              } else {
-                setExtractedText(e.target.value);
-              }
+              if (isSimplified) setSimplifiedText(e.target.value);
+              else if (isTranslated) setTranslatedText(e.target.value);
+              else setExtractedText(e.target.value);
             }}
             placeholder={labels.placeholder}
           ></textarea>
 
           <div className="transcriber-button-group">
-            <button onClick={handleCopy} className="transcriber-button">
-              <FaCopy style={{ marginRight: "6px" }} /> {labels.copy}
+            <button onClick={handleSimplifyToggle} className="transcriber-button">
+              <FaMagic style={{ marginRight: "6px" }} /> {isSimplified ? labels.revertSimplify : labels.simplifyText}
             </button>
 
             {!isTranslated ? (
@@ -309,10 +290,6 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
               </button>
             )}
 
-            <button onClick={handleExportPDF} className="transcriber-button">
-              <FaFilePdf style={{ marginRight: "6px" }} /> {labels.exportPdf}
-            </button>
-
             {!speaking ? (
               <button onClick={handleReadAloud} className="transcriber-button">
                 <FaVolumeUp style={{ marginRight: "6px" }} /> {labels.readAloud}
@@ -323,15 +300,43 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
               </button>
             )}
 
-            <button onClick={handleWhatsAppShare} className="transcriber-button">
-              <FaWhatsapp style={{ marginRight: "6px" }} /> {labels.shareWhatsapp}
-            </button>
+            <button onClick={() => setShowAdvanced(!showAdvanced)} className="transcriber-button">
+  {showAdvanced ? labels.hideAdvanced : labels.showAdvanced}
+</button>
 
-            <button onClick={handleSimplifyToggle} className="transcriber-button">
-              <FaMagic style={{ marginRight: "6px" }} /> 
-              {isSimplified ? labels.revertSimplify : labels.simplifyText}
-            </button>
           </div>
+
+          {showAdvanced && (
+            <div className="transcriber-button-group">
+              <button onClick={handleCopy} className="transcriber-button">
+                <FaCopy style={{ marginRight: "6px" }} /> {labels.copy}
+              </button>
+              <button onClick={handleExportPDF} className="transcriber-button">
+                <FaFilePdf style={{ marginRight: "6px" }} /> {labels.exportPdf}
+              </button>
+              <button onClick={handleWhatsAppShare} className="transcriber-button">
+                <FaWhatsapp style={{ marginRight: "6px" }} /> {labels.shareWhatsapp}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+       {(translatedText || extractedText) && (
+        <>
+          <GlossaryCard
+            text={translatedText || extractedText}
+            selectedLanguage={selectedLanguage}
+            cardClass="transcriber-info-card"
+            buttonClass="transcriber-info-card-button"
+            contentClass="transcriber-info-card-content"
+          />
+          <RightsCard
+            selectedLanguage={selectedLanguage}
+            cardClass="transcriber-info-card"
+            buttonClass="transcriber-info-card-button"
+            contentClass="transcriber-info-card-content"
+          />
         </>
       )}
     </div>

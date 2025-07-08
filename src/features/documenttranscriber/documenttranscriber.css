@@ -1,5 +1,3 @@
-/* documenttranscriber.css */
-
 .transcriber-container {
   max-width: 720px;
   margin: 2rem auto;
@@ -109,6 +107,47 @@
   border-radius: 6px;
 }
 
+/* Scoped Info Cards (GlossaryCard & RightsCard) */
+.transcriber-info-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  color: #fff;
+  text-align: left;
+}
+
+.transcriber-info-card-button {
+  background: linear-gradient(135deg, #72156d, #9d4edd);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  width: 100%;
+  text-align: center;
+}
+
+.transcriber-info-card-button:hover {
+  background: linear-gradient(135deg, #9d4edd, #c77dff);
+  transform: translateY(-2px);
+}
+
+.transcriber-info-card-content {
+  margin-top: 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.transcriber-info-card-content strong {
+  color: #e0b3ff;
+}
+
 @media (max-width: 600px) {
   .transcriber-container {
     margin: 1rem;
@@ -116,8 +155,8 @@
   }
 
   .transcriber-button {
-    width: 100%;
-    max-width: none;
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
   }
 
   .transcriber-textarea {

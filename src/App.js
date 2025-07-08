@@ -3,7 +3,7 @@ import './App.css';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Navbar from './components/navbar';
 import BudgetApp from './features/budgetplanner/BudgetApp';
-// import ChatbotAdvisor from './features/chatbot/ChatbotAdvisor';
+import ChatbotAdvisor from './features/chatbot/ChatbotAdvisor';
 import DocumentTranscriber from './features/documenttranscriber/documenttranscriber';
 
 import { translateTextWithHF } from './utils/huggingfaceapi';
@@ -199,7 +199,7 @@ function App() {
               />
             }
           />
-          {/* <Route path="/chatbot" element={<ChatbotAdvisor />} /> */}
+          <Route path="/chatbot" element={<ChatbotAdvisor selectedLanguage={selectedLanguage} />} />
           <Route path="/budgetplanner/*" element={<BudgetApp />} />
           <Route
             path="/documenttranscriber"

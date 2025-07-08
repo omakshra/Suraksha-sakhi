@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+:root {
+  --primary: #8e5eac;
+  --gradient: linear-gradient(135deg, #6a1b9a, #ba68c8);
+  --accent: #f3e5f5;
+  --hover: #9575cd;
+  --text-light: #ffffff;
+  --text-dark: #222;
+}
+
+.chatbot-language-dropdown {
+  padding: 4px;
+  margin-right: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.chatbot-sakhi-container {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: var(--gradient);
+  border-radius: 16px;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.chatbot-sakhi-title {
+  font-size: 1.7rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 1rem;
+  color: var(--accent);
+}
+
+.chatbot-sakhi-box {
+  background: #fafafa;
+  color: var(--text-dark);
+  border-radius: 12px;
+  padding: 1rem;
+  height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chatbot-message-card {
+  padding: 12px 16px;
+  border-radius: 12px;
+  max-width: 75%;
+  font-size: 1rem;
+  line-height: 1.4;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+}
+
+.user {
+  background-color: var(--primary);
+  color: white;
+  align-self: flex-end;
+}
+
+.bot {
+  background-color: var(--accent);
+  color: var(--text-dark);
+  align-self: flex-start;
+}
+
+.chatbot-sakhi-input-area {
+  margin-top: 1rem;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.chatbot-sakhi-input-area input {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  border: none;
+  font-size: 1rem;
+  background: #f3f3f3;
+  color: var(--text-dark);
+}
+
+.chatbot-sakhi-input-area button {
+  padding: 0.8rem 1.2rem;
+  background-color: var(--hover);
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.chatbot-sakhi-input-area button:hover {
+  background-color: #b39ddb;
+}
+
+@media (max-width: 600px) {
+  .chatbot-sakhi-container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .chatbot-sakhi-title {
+    font-size: 1.4rem;
+  }
+
+  .chatbot-sakhi-box {
+    height: 350px;
+  }
+}
