@@ -1,0 +1,126 @@
+/* documenttranscriber.css */
+
+.transcriber-container {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: linear-gradient(135deg, #5e3d7a, #9c4dcc);
+  border-radius: 18px;
+  color: #fff;
+  text-align: center;
+  font-family: "Segoe UI", sans-serif;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease;
+}
+
+.transcriber-container:hover {
+  transform: translateY(-3px);
+}
+
+.transcriber-heading {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.transcriber-button {
+  background: linear-gradient(135deg, #8e24aa, #ba68c8);
+  border: none;
+  padding: 0.65rem 1.3rem;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  flex: 1 1 auto;
+  max-width: 200px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.transcriber-button:hover {
+  background: linear-gradient(135deg, #ba68c8, #ce93d8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.transcriber-loader {
+  margin: 1rem;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.transcriber-textarea {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 10px;
+  border: none;
+  margin-top: 1rem;
+  font-size: 1rem;
+  resize: vertical;
+  background: #f9f9f9;
+  color: #333;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: "Segoe UI", sans-serif;
+  transition: box-shadow 0.2s ease;
+}
+
+.transcriber-textarea:focus {
+  outline: none;
+  box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.15);
+}
+
+.transcriber-button-group {
+  margin-top: 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.transcriber-file-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.file-name {
+  color: #fff;
+  font-size: 0.95rem;
+  word-break: break-all;
+  max-width: 80%;
+  text-align: center;
+  background: rgba(255,255,255,0.1);
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+}
+
+@media (max-width: 600px) {
+  .transcriber-container {
+    margin: 1rem;
+    padding: 1.2rem;
+  }
+
+  .transcriber-button {
+    width: 100%;
+    max-width: none;
+  }
+
+  .transcriber-textarea {
+    font-size: 0.95rem;
+  }
+}
