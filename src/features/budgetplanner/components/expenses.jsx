@@ -24,7 +24,6 @@ import {
   faPenToSquare,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
-import { motion } from "framer-motion";
 
 import { db } from "../../../utils/firebase";
 import {
@@ -38,6 +37,7 @@ import {
 
 function Expenses() {
   const [expenses, setExpenses] = useState([]);
+  const [graphInsights, setGraphInsights] = useState([]);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
@@ -50,39 +50,115 @@ function Expenses() {
   const [expensesPerPage] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
   const [startMonth, setStartMonth] = useState("");
-  const [endMonth, setEndMonth] = useState("");
-  const [lang, setLang] = useState(localStorage.getItem("selectedLanguage") || "en");
+const [endMonth, setEndMonth] = useState("");
 
-  // ✅ Corrected: Detect localStorage changes using the correct key
+
+  const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
+
+  const labels = {
+  en: {
+    heading: "Expenses",
+    search: "Search by category or amount",
+    total: "Total Expenses",
+    name: "Name",
+    description: "Description",
+    amount: "Amount",
+    date: "Date",
+    category: "Category",
+    select: "Select",
+    add: "Add Expense",
+    paid: "Paid",
+    update: "Update Expense",
+    export: "Export to Excel",
+    search: "Search expenses...",
+    graphInsightsTitle: "Graph Insights",
+    entries: "Entries",
+    trend: "Trend",
+    highest: "Highest",
+    lowest: "Lowest",
+    average: "Average",
+    dateAxis: "Date",
+    amountAxis: "Expense (₹)",
+    increasing: "increasing",
+    decreasing: "decreasing",
+    stable: "stable",
+    categories: {
+      "Groceries & Essentials": "Groceries & Essentials",
+      "Childcare & Family Support": "Childcare & Family Support",
+      "Home & Rent": "Home & Rent",
+      "Education & Career": "Education & Career",
+      "Health & Medical": "Health & Medical",
+      "Personal Care": "Personal Care"
+    }
+  },
+  hi: {
+    heading: "खर्च",
+    total: "कुल खर्च",
+    name: "नाम",
+    description: "विवरण",
+    amount: "राशि",
+    date: "तारीख",
+    category: "श्रेणी",
+    select: "चुनें",
+    add: "खर्च जोड़ें",
+    paid: "भुगतान किया गया",
+    update: "खर्च अपडेट करें",
+    export: "एक्सेल में निर्यात करें",
+    search: "खर्च खोजें...",
+    graphInsightsTitle: "ग्राफ अंतर्दृष्टि",
+    entries: "प्रविष्टियाँ",
+    trend: "प्रवृत्ति",
+    highest: "उच्चतम",
+    lowest: "न्यूनतम",
+    average: "औसत",
+    dateAxis: "तारीख",
+    amountAxis: "खर्च (₹)",
+    increasing: "बढ़ती हुई",
+    decreasing: "घटती हुई",
+    stable: "स्थिर",
+    categories: {
+      "Groceries & Essentials": "किराना और ज़रूरी सामान",
+      "Childcare & Family Support": "बच्चों की देखभाल और पारिवारिक सहायता",
+      "Home & Rent": "घर और किराया",
+      "Education & Career": "शिक्षा और करियर",
+      "Health & Medical": "स्वास्थ्य और चिकित्सा",
+      "Personal Care": "व्यक्तिगत देखभाल"
+    }
+  }
+};
+
+  const t = labels[selectedLanguage];
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newLang = localStorage.getItem("selectedLanguage") || "en";
-      setLang((prev) => (prev !== newLang ? newLang : prev));
-    }, 500);
-    return () => clearInterval(interval);
+    const unsubscribe = onSnapshot(collection(db, "expenses"), (snapshot) => {
+      const loaded = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      setExpenses(loaded);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const t = {
-    title: lang === "hi" ? "खर्च ट्रैकर" : "Expense Tracker",
-    name: lang === "hi" ? "नाम" : "Name",
-    desc: lang === "hi" ? "विवरण" : "Description",
-    amount: lang === "hi" ? "राशि (₹)" : "Amount (₹)",
-    date: lang === "hi" ? "तारीख" : "Date",
-    category: lang === "hi" ? "श्रेणी" : "Category",
-    paid: lang === "hi" ? "भुगतान किया गया" : "Paid",
-    add: lang === "hi" ? "खर्च जोड़ें" : "Add Expense",
-    update: lang === "hi" ? "अपडेट करें" : "Update Expense",
-    total: lang === "hi" ? "कुल खर्च" : "Total Expenses",
-    search: lang === "hi" ? "खर्च खोजें..." : "Search expenses...",
-    startMonth: lang === "hi" ? "प्रारंभ माह" : "Start Month",
-    endMonth: lang === "hi" ? "अंत माह" : "End Month",
-    export: lang === "hi" ? "एक्सेल में निर्यात करें" : "Export to Excel",
-    confirmAdd: lang === "hi" ? "इस खर्च को जोड़ें?" : "Add this expense?",
-    confirmUpdate: lang === "hi" ? "इस खर्च को अपडेट करें?" : "Update this expense?",
-    confirmDelete: lang === "hi" ? "इस खर्च को हटाएं?" : "Remove this expense?",
-    allFieldsRequired: lang === "hi" ? "सभी फ़ील्ड आवश्यक हैं।" : "All fields are required."
-  };
+  useEffect(() => {
+    if (!expenses.length) return;
+    const sorted = [...expenses].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const values = sorted.map((e) => parseFloat(e.amount));
+    const dates = sorted.map((e) => e.date);
+    const total = values.reduce((a, b) => a + b, 0);
+    const avg = total / values.length;
+    const max = Math.max(...values);
+    const min = Math.min(...values);
+    const trend = values[values.length - 1] > values[0] ? t.increasing : values[values.length - 1] < values[0] ? t.decreasing : t.stable;
 
+
+    const gi = [
+  `${t.entries}: ${values.length}`,
+  `${t.trend}: ${trend}`,
+  `${t.highest}: ₹${max} ${selectedLanguage === "hi" ? "को" : "on"} ${dates[values.indexOf(max)]}`,
+  `${t.lowest}: ₹${min} ${selectedLanguage === "hi" ? "को" : "on"} ${dates[values.indexOf(min)]}`,
+  `${t.average}: ₹${avg.toFixed(2)}`,
+];
+
+    setGraphInsights(gi);
+  }, [expenses]);
   const categories = [
   "Groceries & Essentials",
   "Childcare & Family Support",
@@ -92,16 +168,6 @@ function Expenses() {
   "Personal Care",
 ];
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "expenses"), (snapshot) => {
-      const loadedExpenses = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setExpenses(loadedExpenses);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(expenses);
@@ -214,84 +280,94 @@ function Expenses() {
     );
 
   const chartData = {
-    labels: filteredMonthlyExpenses.map((e) => e.date),
-    datasets: [
-      {
-        label: t.title,
-        data: filteredMonthlyExpenses.map((e) => e.amount),
-        borderColor: "rgba(255, 99, 132, 1)",
-        backgroundColor: "rgba(255, 99, 132, 0.2)",
-        tension: 0.3,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    scales: {
-      x: {
-        type: "time",
-        time: { unit: "day" },
-        title: { display: true, text: t.date },
-      },
-      y: {
-        title: { display: true, text: t.amount },
-      },
+  labels: filteredMonthlyExpenses.map((e) => e.date),
+  datasets: [
+    {
+      label: t.heading, // or hardcode like label: "Expenses"
+      data: filteredMonthlyExpenses.map((e) => e.amount),
+      borderColor: "rgba(255, 99, 132, 1)",
+      backgroundColor: "rgba(255, 99, 132, 0.2)",
+      tension: 0.3,
     },
-  };
+  ],
+};
+
+const chartOptions = {
+  maintainAspectRatio: false,
+  responsive: true,
+  scales: {
+    x: {
+      type: "time",
+      time: { unit: "day" },
+      title: { display: true, text: t.dateAxis },
+    },
+    y: {
+      title: { display: true, text: t.amountAxis },
+    },
+  },
+};
+
 
   return (
     <Container className="expense-container">
-      <h3 className="mb-4">{t.title}</h3>
-      <InputGroup className="mb-3">
-        <FormControl
-          placeholder={t.search}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </InputGroup>
+<h2 className="mb-3 fw-semibold" style={{ color: "#6f42c1" }}>
+  {t.heading}
+</h2>
+
+<InputGroup className="mb-3">
+  <FormControl
+    placeholder={t.search}
+    onChange={(e) => setSearchQuery(e.target.value)}
+  />
+</InputGroup>
+
+<Row className="mb-3">
+  <Col md={6}>
+    <Form.Group>
+      <Form.Label>Start Month</Form.Label>
+      <Form.Control
+        type="month"
+        value={startMonth}
+        onChange={(e) => setStartMonth(e.target.value)}
+      />
+    </Form.Group>
+  </Col>
+  <Col md={6}>
+    <Form.Group>
+      <Form.Label>End Month</Form.Label>
+      <Form.Control
+        type="month"
+        value={endMonth}
+        onChange={(e) => setEndMonth(e.target.value)}
+      />
+    </Form.Group>
+  </Col>
+</Row>
+
+
       <Row>
         <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>{t.startMonth}</Form.Label>
-            <Form.Control
-              type="month"
-              value={startMonth}
-              onChange={(e) => setStartMonth(e.target.value)}
-            />
-          </Form.Group>
-        </Col>
-        <Col md={6}>
-          <Form.Group className="mb-3">
-            <Form.Label>{t.endMonth}</Form.Label>
-            <Form.Control
-              type="month"
-              value={endMonth}
-              onChange={(e) => setEndMonth(e.target.value)}
-            />
-          </Form.Group>
-        </Col>
-      </Row>
-      <Row>
-        <Col md={6}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <Card>
-              <Card.Body>
-                <Card.Title>{t.total}</Card.Title>
-                <Card.Text>
-                  ₹{Number(totalExpense).toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
-                </Card.Text>
-              </Card.Body>
+          <Card className="mt-3">
+            <Card.Body>
+              <Card.Title>{t.total}</Card.Title>
+              <Card.Text>Total: ₹{totalExpense.toFixed(2)}</Card.Text>
+            </Card.Body>
+          </Card>
+
+          {graphInsights.length > 0 && (
+            <Card className="mt-3 bg-light p-3">
+              <h6 style={{ fontWeight: "bold" }}>Graph Insights</h6>
+              <div style={{ paddingLeft: "10px" }}>
+                {graphInsights.map((insight, index) => (
+                  <div key={index}>{insight}</div>
+                ))}
+              </div>
             </Card>
-          </motion.div>
+          )}
         </Col>
+
         <Col md={6}>
-          <div className="chart-container">
+          <div className="chart-container" style={{ height: "300px" }}>
             <Line data={chartData} options={chartOptions} />
           </div>
         </Col>
@@ -309,15 +385,17 @@ function Expenses() {
             </Form.Group>
           </Col>
           <Col md={4}>
-            <Form.Group>
-              <Form.Label>{t.desc}</Form.Label>
-              <Form.Control
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t.desc}
-              />
-            </Form.Group>
-          </Col>
+  <Form.Group>
+    <Form.Label>{t.description}</Form.Label> {/* ✅ This is the missing line */}
+    <Form.Control
+      type="text"
+      value={description}
+      onChange={(e) => setDescription(e.target.value)}
+      required
+    />
+  </Form.Group>
+</Col>
+
           <Col md={4}>
             <Form.Group>
               <Form.Label>{t.amount}</Form.Label>
@@ -349,21 +427,25 @@ function Expenses() {
               >
                 <option value="">Select</option>
                 {categories.map((cat, i) => (
-                  <option key={i} value={cat}>
-                    {cat}
-                  </option>
-                ))}
+  <option key={i} value={cat}>
+    {t.categories[cat] || cat}
+  </option>
+))}
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col md={4} className="d-flex align-items-center">
-            <Form.Check
-              type="checkbox"
-              label={t.paid}
-              checked={isPaid}
-              onChange={(e) => setIsPaid(e.target.checked)}
-            />
-          </Col>
+          <Col md={4} className="d-flex align-items-center mt-4">
+  <Form.Check
+    type="checkbox"
+    id="paidCheckbox"
+    label={t.paid || "Paid"}
+    checked={isPaid}
+    onChange={(e) => setIsPaid(e.target.checked)}
+    className="mb-0"
+  />
+</Col>
+
+
         </Row>
         <Button type="submit" className="mb-3">
           {editing ? t.update : t.add}{" "}
@@ -383,7 +465,9 @@ function Expenses() {
               })}{" "}
               on {exp.date}
               <br />
-              {exp.description} | {exp.category} | {exp.status}
+              {exp.description} | {t.categories[exp.category] || exp.category} | {selectedLanguage === "hi" ? (exp.status === "PAID" ? "भुगतान किया गया" : "बकाया") : exp.status}
+
+
             </div>
             <div className="button-group">
               <Button size="sm" className="me-2" onClick={() => handleEdit(exp)}>
