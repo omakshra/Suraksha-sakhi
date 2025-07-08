@@ -255,7 +255,7 @@ const getTranslatedCategory = (cat) => {
     ];
 
     setGraphInsights(newGraphInsights);
-  }, [incomes, t]); // Depend on incomes and the translation object 't'
+  }, [incomes, selectedLanguage]); // Depend on incomes and the translation object 't'
 
 
   const exportToExcel = () => {

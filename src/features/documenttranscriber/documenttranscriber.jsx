@@ -139,7 +139,7 @@ hideAdvanced: "⚙️ Hide Advanced",
       });
   };
 
-  const handleTranslate = async () => {
+ const handleTranslate = async () => {
     const baseText = isSimplified ? simplifiedText : extractedText;
 
     if (!baseText.trim()) {
@@ -159,11 +159,17 @@ hideAdvanced: "⚙️ Hide Advanced",
             setProgress(Math.floor(((i + 1) / chunks.length) * 100));
         }
 
-        const finalTranslatedText = translatedChunks.join('\n\n');
+        let finalTranslatedText = translatedChunks.join('\n\n');
+
+        // ✅ Remove English words but preserve structure
+        const cleanedLines = finalTranslatedText.split('\n').map(line =>
+            line.replace(/\b[a-zA-Z]+\b/g, '').replace(/\s{2,}/g, ' ').trim()
+        );
+        finalTranslatedText = cleanedLines.join('\n');
+
         setTranslatedText(finalTranslatedText);
         setIsTranslated(true);
 
-        // ✅ Update simplifiedText if it was simplified so further actions use translated Hindi
         if (isSimplified) {
             setSimplifiedText(finalTranslatedText);
         }
@@ -192,10 +198,36 @@ hideAdvanced: "⚙️ Hide Advanced",
     doc.save('transcribed_document.pdf');
   };
 
-  const handleReadAloud = () => {
-    const textToRead = isSimplified ? simplifiedText : translatedText || extractedText;
-    speak(textToRead, isTranslated ? "hi-IN" : "en-US");
-  };
+  const cleanHindiTextForSpeech = (text) => {
+  return text
+    .split('\n')
+    .map(line => line.replace(/\b[a-zA-Z]+\b/g, '').replace(/[0-9]/g, '').trim())
+    .filter(line => line.length > 0)
+    .join('\n')
+    .trim();
+};
+
+const handleReadAloud = () => {
+  const textToRead = isSimplified ? simplifiedText : translatedText || extractedText;
+
+  if (!textToRead.trim()) {
+    alert("No text to read aloud.");
+    return;
+  }
+
+  let textToSpeak = textToRead;
+  let preferredLang = "en-US";
+
+  if (isTranslated) {
+    textToSpeak = cleanHindiTextForSpeech(textToRead);
+    preferredLang = "hi-IN";
+  } else if (/[\u0900-\u097F]/.test(textToRead)) { // Detect Devanagari
+    textToSpeak = cleanHindiTextForSpeech(textToRead);
+    preferredLang = "hi-IN";
+  }
+
+  speak(textToSpeak, preferredLang);
+};
 
   const handleWhatsAppShare = () => {
     const text = encodeURIComponent(isSimplified ? simplifiedText : translatedText || extractedText);
