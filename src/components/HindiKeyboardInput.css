@@ -1,0 +1,41 @@
+/* HindiKeyboardInput.css */
+
+.hindi-input-container {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.myTheme {
+  margin-top: 10px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+  padding: 10px;
+  background-color: #ffffff;
+  z-index: 10;
+}
+
+.simple-keyboard {
+  max-width: 100%;
+  font-size: 1rem;
+}
+
+.simple-keyboard .hg-button {
+  border-radius: 8px;
+  padding: 10px;
+  margin: 2px;
+}
+
+.simple-keyboard .hg-button.hg-functionBtn {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.simple-keyboard .hg-button.hg-standardBtn {
+  background-color: #ffffff;
+  transition: background-color 0.2s ease;
+}
+
+.simple-keyboard .hg-button.hg-standardBtn:hover {
+  background-color: #f2f2f2;
+  cursor: pointer;
+}

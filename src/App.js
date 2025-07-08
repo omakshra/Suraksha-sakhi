@@ -142,10 +142,11 @@ function Home({ selectedLanguage, setSelectedLanguage }) {
               link="/chatbot"
             />
             <FeatureCard
-              title={featureCardTitles[1]}
-              description={translatedContent.features[1]}
-              link="/budgetplanner"
-            />
+  title={featureCardTitles[1]}
+  description={translatedContent.features[1]}
+  link="/budgetplanner/dashboard"
+/>
+
             <FeatureCard
               title={featureCardTitles[2]}
               description={translatedContent.features[2]}
