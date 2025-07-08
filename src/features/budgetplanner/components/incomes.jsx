@@ -38,130 +38,85 @@ function Incomes() {
   const selectedLanguage = localStorage.getItem("selectedLanguage") || "en";
 
   const labels = {
-  en: {
-    heading: "Incomes",
-    total: "Total Income",
-    name: "Name",
-    description: "Description",
-    amount: "Amount",
-    date: "Date",
-    category: "Category",
-    select: "Select",
-    add: "Add Income",
-    update: "Update Income",
-    export: "Export to Excel",
-    search: "Search incomes...",
-    edit: "Edit",
-    remove: "Remove",
-    deleteConfirm: "Delete this income?",
-    updateConfirm: "Update this income?",
-    addConfirm: "Add new income?",
-    error: "All fields are required.",
-    graphInsightsTitle: "Graph Insights",
-    entries: "Entries",
-    trend: "Trend",
-    highest: "Highest",
-    lowest: "Lowest",
-    average: "Average",
-    dateAxis: "Date",
-    amountAxis: "Income (₹)",
-    categories: {
-      Salary: "Salary",
-      Freelance: "Freelance",
-      Business: "Business",
-      Investments: "Investments",
-      Other: "Other",
+    en: {
+      heading: "Incomes",
+      total: "Total Income",
+      name: "Name",
+      description: "Description",
+      amount: "Amount",
+      date: "Date",
+      category: "Category",
+      select: "Select",
+      add: "Add Income",
+      update: "Update Income",
+      export: "Export to Excel",
+      search: "Search incomes...",
+      edit: "Edit",
+      remove: "Remove",
+      deleteConfirm: "Delete this income?",
+      updateConfirm: "Update this income?",
+      addConfirm: "Add new income?",
+      error: "All fields are required.",
     },
-  },
-  hi: {
-    heading: "आय",
-    total: "कुल आय",
-    name: "नाम",
-    description: "विवरण",
-    amount: "राशि",
-    date: "तारीख",
-    category: "श्रेणी",
-    select: "चुनें",
-    add: "आय जोड़ें",
-    update: "आय अपडेट करें",
-    export: "एक्सेल में निर्यात करें",
-    search: "आय खोजें...",
-    edit: "संपादित करें",
-    remove: "हटाएं",
-    deleteConfirm: "क्या आप इस आय को हटाना चाहते हैं?",
-    updateConfirm: "क्या आप इस आय को अपडेट करना चाहते हैं?",
-    addConfirm: "नई आय जोड़ना चाहते हैं?",
-    error: "सभी फ़ील्ड आवश्यक हैं।",
-    graphInsightsTitle: "ग्राफ़ अंतर्दृष्टि",
-    entries: "प्रविष्टियाँ",
-    trend: "प्रवृत्ति",
-    highest: "उच्चतम",
-    lowest: "न्यूनतम",
-    average: "औसत",
-    dateAxis: "तारीख",
-    amountAxis: "आय (₹)",
-    categories: {
-      Salary: "वेतन",
-      Freelance: "स्वतंत्र कार्य",
-      Business: "व्यवसाय",
-      Investments: "निवेश",
-      Other: "अन्य",
-    },
-  },
-};
+    hi: {
+      heading: "आय",
+      total: "कुल आय",
+      name: "नाम",
+      description: "विवरण",
+      amount: "राशि",
+      date: "तारीख",
+      category: "श्रेणी",
+      select: "चुनें",
+      add: "आय जोड़ें",
+      update: "आय अपडेट करें",
+      export: "एक्सेल में निर्यात करें",
+      search: "आय खोजें...",
+      edit: "संपादित करें",
+      remove: "हटाएं",
+      deleteConfirm: "क्या आप इस आय को हटाना चाहते हैं?",
+      updateConfirm: "क्या आप इस आय को अपडेट करना चाहते हैं?",
+      addConfirm: "नई आय जोड़ना चाहते हैं?",
+      error: "सभी फ़ील्ड आवश्यक हैं।",
+    }
+  };
 
   const t = labels[selectedLanguage];
 
   const [incomes, setIncomes] = useState([]);
-  const [graphInsights, setGraphInsights] = useState([]);
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState("");
+  const [description, setDescription] = useState("");
+  const [isPaid, setIsPaid] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [currentIncome, setCurrentIncome] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [incomesPerPage] = useState(5);
+  const [category, setCategory] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [insights, setInsights] = useState([]);
-  const [name, setName] = useState(""); 
-  const [amount, setAmount] = useState(""); 
-  const [date, setDate] = useState(""); 
-  const [description, setDescription] = useState(""); 
-  const [category, setCategory] = useState(""); 
-  const [isPaid, setIsPaid] = useState(false); 
-  const [editing, setEditing] = useState(false); 
-  const [currentIncome, setCurrentIncome] = useState(null); 
-  const [searchQuery, setSearchQuery] = useState(""); 
-  const [currentPage, setCurrentPage] = useState(1); 
-  const incomesPerPage = 5;  
-  const categories = ["Salary", "Freelance", "Business", "Investments", "Other"];
+
+  const categories = [
+    "Salary / Job",
+    "Freelance / Home Business",
+    "Family Support",
+    "Government Schemes",
+    "Investments",
+    "Side Hustles",
+  ];
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "incomes"), (snapshot) => {
-      const loaded = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      const loaded = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setIncomes(loaded);
     });
     return () => unsubscribe();
   }, []);
 
-
   // AI Insights Logic – Saving Tips Only
-
-  useEffect(() => {
-    if (!incomes.length) return;
-    const sorted = [...incomes].sort((a, b) => new Date(a.date) - new Date(b.date));
-    const values = sorted.map(i => parseFloat(i.amount));
-    const dates = sorted.map(i => i.date);
-    const total = values.reduce((a, b) => a + b, 0);
-    const avg = total / values.length;
-    const max = Math.max(...values);
-    const min = Math.min(...values);
-    const trend = values[values.length - 1] > values[0] ? "increasing" : values[values.length - 1] < values[0] ? "decreasing" : "stable";
-
-    const gi = [
-  `${t.entries}: ${values.length}`,
-  `${t.trend}: ${trend}`,
-  `${t.highest}: ₹${max} on ${dates[values.indexOf(max)]}`,
-  `${t.lowest}: ₹${min} on ${dates[values.indexOf(min)]}`,
-  `${t.average}: ₹${avg.toFixed(2)}`,
-];
-
-    setGraphInsights(gi);
-  }, [incomes]);
-  // AI Insights Logic
-
   useEffect(() => {
     if (!incomes.length) return;
 
@@ -181,6 +136,7 @@ function Incomes() {
       aiTips.push(`👑 Invest 5–10% in Gold (~₹${goldFive} to ₹${goldTen}) – try Sovereign Gold Bonds (SGB) or Digital Gold for long-term safety and appreciation.`);
       aiTips.push(`📊 Consider ELSS or PPF to save tax under Section 80C and build wealth. 👉 ` +
   `<a href="https://www.nsiindia.gov.in/(S(kcmfazads4lcngixrnrpr355))/InternalPage.aspx?Id_Pk=27" target="_blank" rel="noopener noreferrer">Click here for more government schemes</a>`);
+
       aiTips.push(`📈 Saving 20% (~₹${twentyPercent}) every month builds financial security over time. You're on the right track! 💚`);
       aiTips.push(`💭 Tip: Cut down small luxuries and channel that into these saving plans.`);
     }
@@ -294,58 +250,47 @@ function Incomes() {
 
   const chartData = {
     labels: incomes.map((i) => new Date(i.date)),
-    datasets: [{
-      label: t.total,
-      data: incomes.map((i) => i.amount),
-      backgroundColor: "rgba(75,192,192,0.2)",
-      borderColor: "rgba(75,192,192,1)",
-      borderWidth: 2,
-      fill: true,
-    }],
+    datasets: [
+      {
+        label: t.total,
+        data: incomes.map((i) => i.amount),
+        backgroundColor: "rgba(75,192,192,0.2)",
+        borderColor: "rgba(75,192,192,1)",
+        borderWidth: 2,
+      },
+    ],
   };
 
   const chartOptions = {
-  maintainAspectRatio: false,
-  responsive: true,
-  scales: {
-    x: {
-      type: "time",
-      time: { unit: "day" },
-      title: { display: true, text: t.dateAxis },
+    scales: {
+      x: {
+        type: "time",
+        time: { unit: "day" },
+        title: { display: true, text: "Date" },
+      },
+      y: { title: { display: true, text: "Income (₹)" } },
     },
-    y: {
-      title: { display: true, text: t.amountAxis },
-    },
-  },
-};
-
+  };
 
   return (
     <Container className="income-container">
       <h2 className="mb-3">{t.heading}</h2>
-      <InputGroup className="mb-3">
-  <FormControl
-    placeholder={t.search}
-    onChange={(e) => setSearchQuery(e.target.value)}
-  />
-</InputGroup>
 
+      <InputGroup className="mb-3">
+        <FormControl
+          placeholder={t.search}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </InputGroup>
 
       {insights.length > 0 && (
         <Card className="mb-3 bg-light p-3">
-
           <h5>💡 AI Insights</h5>
           <ul style={{ textAlign: "left", paddingLeft: "20px" }}>
             {insights.map((tip, i) => (
               <li key={i} dangerouslySetInnerHTML={{ __html: tip }}></li>
             ))}
           </ul>
-
-          <h5>AI Insights</h5>
-          <div style={{ textAlign: "left", paddingLeft: "10px" }}>
-            {insights.map((tip, i) => <div key={i}>{tip}</div>)}
-          </div>
-
         </Card>
       )}
 
@@ -357,18 +302,9 @@ function Incomes() {
               <Card.Text>Total: ₹{totalIncome.toFixed(2)}</Card.Text>
             </Card.Body>
           </Card>
-
-          {graphInsights.length > 0 && (
-            <Card className="mt-3 bg-light p-3">
-              <h6 style={{ fontWeight: "bold" }}>{t.graphInsightsTitle}</h6>
-              <div style={{ paddingLeft: "10px" }}>
-                {graphInsights.map((insight, index) => <div key={index}>{insight}</div>)}
-              </div>
-            </Card>
-          )}
         </Col>
         <Col md={6}>
-          <div className="chart-container" style={{ height: "300px" }}>
+          <div className="chart-container">
             <Line data={chartData} options={chartOptions} />
           </div>
         </Col>
@@ -426,15 +362,12 @@ function Incomes() {
           <Col md={4}>
             <Form.Group>
               <Form.Label>{t.category}</Form.Label>
-             <Form.Select value={category} onChange={(e) => setCategory(e.target.value)}>
-  <option value="">{t.select}</option>
-  {categories.map((cat, idx) => (
-    <option key={idx} value={cat}>
-      {t.categories[cat] || cat}
-    </option>
-  ))}
-</Form.Select>
-
+              <Form.Select value={category} onChange={(e) => setCategory(e.target.value)}>
+                <option value="">{t.select}</option>
+                {categories.map((cat, idx) => (
+                  <option key={idx} value={cat}>{cat}</option>
+                ))}
+              </Form.Select>
             </Form.Group>
           </Col>
         </Row>
@@ -450,8 +383,7 @@ function Incomes() {
             <div className="d-flex justify-content-between align-items-center">
               <span>
                 {income.name} - ₹{income.amount} - {income.date} - {income.description} -{" "}
-                {t.categories[income.category] || income.category}
-
+                {income.category}
               </span>
               <div>
                 <Button size="sm" className="me-2" onClick={() => handleEdit(income)}>

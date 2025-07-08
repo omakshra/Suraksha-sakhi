@@ -26,6 +26,7 @@ import {
   faPenToSquare,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
+import { motion } from "framer-motion";
 
 import { db } from "../../../utils/firebase";
 import {
@@ -39,7 +40,6 @@ import {
 
 function Expenses() {
   const [expenses, setExpenses] = useState([]);
-  const [graphInsights, setGraphInsights] = useState([]);
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
@@ -55,37 +55,35 @@ function Expenses() {
   const [endMonth, setEndMonth] = useState("");
   const [lang, setLang] = useState(localStorage.getItem("selectedLanguage") || "en");
 
-  // ✅ Corrected: Detect localStorage changes using the correct key
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "expenses"), (snapshot) => {
-      const loaded = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setExpenses(loaded);
-    });
-    return () => unsubscribe();
+    const interval = setInterval(() => {
+      const newLang = localStorage.getItem("selectedLanguage") || "en";
+      setLang((prev) => (prev !== newLang ? newLang : prev));
+    }, 500);
+    return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (!expenses.length) return;
-    const sorted = [...expenses].sort((a, b) => new Date(a.date) - new Date(b.date));
-    const values = sorted.map((e) => parseFloat(e.amount));
-    const dates = sorted.map((e) => e.date);
-    const total = values.reduce((a, b) => a + b, 0);
-    const avg = total / values.length;
-    const max = Math.max(...values);
-    const min = Math.min(...values);
-    const trend = values[values.length - 1] > values[0] ? t.increasing : values[values.length - 1] < values[0] ? t.decreasing : t.stable;
+  const t = {
+    title: lang === "hi" ? "खर्च ट्रैकर" : "Expense Tracker",
+    name: lang === "hi" ? "नाम" : "Name",
+    desc: lang === "hi" ? "विवरण" : "Description",
+    amount: lang === "hi" ? "राशि (₹)" : "Amount (₹)",
+    date: lang === "hi" ? "तारीख" : "Date",
+    category: lang === "hi" ? "श्रेणी" : "Category",
+    paid: lang === "hi" ? "भुगतान किया गया" : "Paid",
+    add: lang === "hi" ? "खर्च जोड़ें" : "Add Expense",
+    update: lang === "hi" ? "अपडेट करें" : "Update Expense",
+    total: lang === "hi" ? "कुल खर्च" : "Total Expenses",
+    search: lang === "hi" ? "खर्च खोजें..." : "Search expenses...",
+    startMonth: lang === "hi" ? "प्रारंभ माह" : "Start Month",
+    endMonth: lang === "hi" ? "अंत माह" : "End Month",
+    export: lang === "hi" ? "एक्सेल में निर्यात करें" : "Export to Excel",
+    confirmAdd: lang === "hi" ? "इस खर्च को जोड़ें?" : "Add this expense?",
+    confirmUpdate: lang === "hi" ? "इस खर्च को अपडेट करें?" : "Update this expense?",
+    confirmDelete: lang === "hi" ? "इस खर्च को हटाएं?" : "Remove this expense?",
+    allFieldsRequired: lang === "hi" ? "सभी फ़ील्ड आवश्यक हैं।" : "All fields are required."
+  };
 
-
-    const gi = [
-  `${t.entries}: ${values.length}`,
-  `${t.trend}: ${trend}`,
-  `${t.highest}: ₹${max} ${selectedLanguage === "hi" ? "को" : "on"} ${dates[values.indexOf(max)]}`,
-  `${t.lowest}: ₹${min} ${selectedLanguage === "hi" ? "को" : "on"} ${dates[values.indexOf(min)]}`,
-  `${t.average}: ₹${avg.toFixed(2)}`,
-];
-
-    setGraphInsights(gi);
-  }, [expenses]);
   const categories = [
     "Groceries & Essentials",
     "Childcare & Family Support",
@@ -96,6 +94,16 @@ function Expenses() {
     "Entertainment"
   ];
 
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, "expenses"), (snapshot) => {
+      const loadedExpenses = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setExpenses(loadedExpenses);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const exportToExcel = () => {
     const ws = XLSX.utils.json_to_sheet(expenses);
@@ -208,17 +216,17 @@ function Expenses() {
     );
 
   const chartData = {
-  labels: filteredMonthlyExpenses.map((e) => e.date),
-  datasets: [
-    {
-      label: t.heading, // or hardcode like label: "Expenses"
-      data: filteredMonthlyExpenses.map((e) => e.amount),
-      borderColor: "rgba(255, 99, 132, 1)",
-      backgroundColor: "rgba(255, 99, 132, 0.2)",
-      tension: 0.3,
-    },
-  ],
-};
+    labels: filteredMonthlyExpenses.map((e) => e.date),
+    datasets: [
+      {
+        label: t.title,
+        data: filteredMonthlyExpenses.map((e) => e.amount),
+        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(255, 99, 132, 0.2)",
+        tension: 0.3,
+      },
+    ],
+  };
 
   const chartOptions = {
     responsive: true,
@@ -234,6 +242,91 @@ function Expenses() {
     },
   };
 
+  const [aiInsights, setAiInsights] = useState({
+    topCategory: null,
+    leastCategory: null,
+    overspentCategories: [],
+    paidRatio: 0,
+    budgetSuggestions: [],
+    flaggedUnnecessary: [],
+  });
+
+  useEffect(() => {
+    if (expenses.length === 0) return;
+
+    const categoryTotals = {};
+    expenses.forEach((e) => {
+      const cat = e.category || "Uncategorized";
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + parseFloat(e.amount || 0);
+    });
+
+    const totalSpent = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+
+    const topCategory = Object.entries(categoryTotals).reduce(
+      (top, curr) => (curr[1] > top[1] ? curr : top),
+      ["None", 0]
+    );
+
+    const leastCategory = Object.entries(categoryTotals).reduce(
+      (least, curr) => (curr[1] < least[1] && curr[1] > 0 ? curr : least),
+      [null, Infinity]
+    );
+
+    const overspentCategories = Object.entries(categoryTotals).filter(
+      ([_, amt]) => amt > 0.4 * totalSpent
+    );
+
+    const paidCount = expenses.filter((e) => e.status === "PAID").length;
+    const dueCount = expenses.filter((e) => e.status === "DUE").length;
+    const totalCount = paidCount + dueCount;
+    const paidRatio = totalCount > 0 ? (paidCount / totalCount) * 100 : 0;
+
+    const idealBudget = {
+      "Groceries & Essentials": 15,
+      "Childcare & Family Support": 10,
+      "Home & Rent": 30,
+      "Education & Career": 10,
+      "Health & Medical": 15,
+      "Personal Care": 10,
+    };
+
+    const budgetSuggestions = Object.entries(categoryTotals).map(([cat, amt]) => {
+      const percentage = (amt / totalSpent) * 100;
+      const ideal = idealBudget[cat] || 10;
+      return {
+        category: cat,
+        actual: percentage.toFixed(1),
+        ideal,
+        status:
+          percentage > ideal + 5
+            ? "⚠️ Over Budget"
+            : percentage < ideal - 5
+            ? "✅ Under Budget"
+            : "👌 On Track",
+      };
+    });
+
+    const unnecessaryCategories = ["Personal Care"];
+    const flaggedUnnecessary = unnecessaryCategories
+      .filter((cat) => {
+        const amt = categoryTotals[cat] || 0;
+        return (amt / totalSpent) * 100 > 15;
+      })
+      .map((cat) => ({
+        category: cat,
+        percent: ((categoryTotals[cat] / totalSpent) * 100).toFixed(1),
+      }));
+
+    setAiInsights({
+      topCategory,
+      leastCategory,
+      overspentCategories,
+      paidRatio,
+      budgetSuggestions,
+      flaggedUnnecessary,
+    });
+  }, [expenses]);
+
   return (
     <Container className="expense-container">
       <h3 className="mb-4">{t.title}</h3>
@@ -243,6 +336,73 @@ function Expenses() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </InputGroup>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+        <Card className="mb-4">
+          <Card.Body>
+            <Card.Title>💡 AI Expense Insights</Card.Title>
+            <ul style={{ textAlign: "left", paddingLeft: "1.2rem" }}>
+              <li>
+                📊 You're mostly spending money on <strong>{aiInsights.topCategory?.[0]}</strong>.
+              </li>
+              <li>
+                💸 You're spending the least on <strong>{aiInsights.leastCategory?.[0]}</strong>.
+              </li>
+              {aiInsights.overspentCategories.length > 0 ? (() => {
+                const essentialCategories = [
+                  "Home & Rent",
+                  "Health & Medical",
+                  "Education & Career",
+                  "Childcare & Family Support"
+                ];
+                const filteredOverspent = aiInsights.overspentCategories.filter(
+                  ([cat]) => !essentialCategories.includes(cat)
+                );
+                if (filteredOverspent.length === 0) {
+                  return (
+                    <li>✅ Most of your money is going into essential areas. That’s totally fine!</li>
+                  );
+                } else {
+                  return (
+                    <li>
+                      ⚠️ You're spending a lot on <strong>{filteredOverspent.map(([cat]) => cat).join(", ")}</strong>. Try to reduce if possible.
+                    </li>
+                  );
+                }
+              })() : (
+                <li>✅ Good job! No area has too much spending.</li>
+              )}
+              <li>
+                💰 So far, most expenses are <strong>{aiInsights.paidRatio > 50 ? "PAID" : "DUE"}</strong>.{" "}
+                {aiInsights.paidRatio > 50 ? "You're handling bills well." : "Try to clear dues when you can."}
+              </li>
+              <li>📋 Your category summary:</li>
+              <ul>
+                {aiInsights.budgetSuggestions.map((s, i) => (
+                  <li key={i}>
+                    {s.category}:{" "}
+                    {s.status === "⚠️ Over Budget"
+                      ? "Too much spent here. Try to lower it."
+                      : s.status === "✅ Under Budget"
+                      ? "You're saving nicely here. Good job!"
+                      : "Spending is balanced."}
+                  </li>
+                ))}
+              </ul>
+              {aiInsights.flaggedUnnecessary.length > 0 ? (
+                <li>
+                  🚫 Try to cut back on extra things like{" "}
+                  {aiInsights.flaggedUnnecessary.map((f) => f.category).join(", ")}.
+                </li>
+              ) : (
+                <li>🎯 You're not wasting money. Well done!</li>
+              )}
+            </ul>
+          </Card.Body>
+        </Card>
+      </motion.div>
+
+
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
@@ -267,27 +427,25 @@ function Expenses() {
       </Row>
       <Row>
         <Col md={6}>
-          <Card className="mt-3">
-            <Card.Body>
-              <Card.Title>{t.total}</Card.Title>
-              <Card.Text>Total: ₹{totalExpense.toFixed(2)}</Card.Text>
-            </Card.Body>
-          </Card>
-
-          {graphInsights.length > 0 && (
-            <Card className="mt-3 bg-light p-3">
-              <h6 style={{ fontWeight: "bold" }}>Graph Insights</h6>
-              <div style={{ paddingLeft: "10px" }}>
-                {graphInsights.map((insight, index) => (
-                  <div key={index}>{insight}</div>
-                ))}
-              </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Card>
+              <Card.Body>
+                <Card.Title>{t.total}</Card.Title>
+                <Card.Text>
+                  ₹{Number(totalExpense).toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </Card.Text>
+              </Card.Body>
             </Card>
-          )}
+          </motion.div>
         </Col>
-
         <Col md={6}>
-          <div className="chart-container" style={{ height: "300px" }}>
+          <div className="chart-container">
             <Line data={chartData} options={chartOptions} />
           </div>
         </Col>
@@ -305,17 +463,15 @@ function Expenses() {
             </Form.Group>
           </Col>
           <Col md={4}>
-  <Form.Group>
-    <Form.Label>{t.description}</Form.Label> {/* ✅ This is the missing line */}
-    <Form.Control
-      type="text"
-      value={description}
-      onChange={(e) => setDescription(e.target.value)}
-      required
-    />
-  </Form.Group>
-</Col>
-
+            <Form.Group>
+              <Form.Label>{t.desc}</Form.Label>
+              <Form.Control
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t.desc}
+              />
+            </Form.Group>
+          </Col>
           <Col md={4}>
             <Form.Group>
               <Form.Label>{t.amount}</Form.Label>
@@ -347,25 +503,21 @@ function Expenses() {
               >
                 <option value="">Select</option>
                 {categories.map((cat, i) => (
-  <option key={i} value={cat}>
-    {t.categories[cat] || cat}
-  </option>
-))}
+                  <option key={i} value={cat}>
+                    {cat}
+                  </option>
+                ))}
               </Form.Select>
             </Form.Group>
           </Col>
-          <Col md={4} className="d-flex align-items-center mt-4">
-  <Form.Check
-    type="checkbox"
-    id="paidCheckbox"
-    label={t.paid || "Paid"}
-    checked={isPaid}
-    onChange={(e) => setIsPaid(e.target.checked)}
-    className="mb-0"
-  />
-</Col>
-
-
+          <Col md={4} className="d-flex align-items-center">
+            <Form.Check
+              type="checkbox"
+              label={t.paid}
+              checked={isPaid}
+              onChange={(e) => setIsPaid(e.target.checked)}
+            />
+          </Col>
         </Row>
         <Button type="submit" className="mb-3">
           {editing ? t.update : t.add}{" "}
@@ -385,9 +537,7 @@ function Expenses() {
               })}{" "}
               on {exp.date}
               <br />
-              {exp.description} | {t.categories[exp.category] || exp.category} | {selectedLanguage === "hi" ? (exp.status === "PAID" ? "भुगतान किया गया" : "बकाया") : exp.status}
-
-
+              {exp.description} | {exp.category} | {exp.status}
             </div>
             <div className="button-group">
               <Button size="sm" className="me-2" onClick={() => handleEdit(exp)}>
