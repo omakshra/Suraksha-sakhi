@@ -27,6 +27,8 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import { motion } from "framer-motion";
+import HindiKeyboardInput from "../../../components/HindiKeyboardInput";
+
 
 import { db } from "../../../utils/firebase";
 import {
@@ -54,6 +56,7 @@ function Expenses() {
   const [startMonth, setStartMonth] = useState("");
   const [endMonth, setEndMonth] = useState("");
   const [lang, setLang] = useState(localStorage.getItem("selectedLanguage") || "en");
+  const [expenseDescription, setExpenseDescription] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -421,12 +424,11 @@ useEffect(() => {
   return (
     <Container className="expense-container">
       <h3 className="mb-4">{t.title}</h3>
-      <InputGroup className="mb-3">
-        <FormControl
-          placeholder={t.search}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </InputGroup>
+      <HindiKeyboardInput
+  value={searchQuery}
+  setValue={setSearchQuery}
+/>
+
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
         <Card className="mb-4">
@@ -565,21 +567,21 @@ useEffect(() => {
           <Col md={4}>
             <Form.Group>
               <Form.Label>{t.name}</Form.Label>
-              <Form.Control
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t.name}
-              />
+              <HindiKeyboardInput
+  value={name}
+  setValue={setName}
+/>
+
             </Form.Group>
           </Col>
           <Col md={4}>
             <Form.Group>
               <Form.Label>{t.desc}</Form.Label>
-              <Form.Control
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={t.desc}
-              />
+              <HindiKeyboardInput
+  value={description}
+  setValue={setDescription}
+/>
+
             </Form.Group>
           </Col>
           <Col md={4}>

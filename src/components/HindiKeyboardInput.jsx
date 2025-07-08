@@ -1,5 +1,4 @@
-// HindiKeyboardInput.jsx
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Keyboard from "react-simple-keyboard";
 import "react-simple-keyboard/build/css/index.css";
 import "./HindiKeyboardInput.css";
@@ -7,29 +6,46 @@ import "./HindiKeyboardInput.css";
 const HindiKeyboardInput = ({ value, setValue }) => {
   const [showKeyboard, setShowKeyboard] = useState(false);
   const inputRef = useRef();
+  const wrapperRef = useRef();
 
-  const onChange = (input) => {
-    setValue(input);
+  const onKeyPress = (button) => {
+    if (button === "{bksp}") {
+      setValue((prev) => prev.slice(0, -1));
+    } else if (button === "{space}") {
+      setValue((prev) => prev + " ");
+    } else if (button === "{enter}") {
+      setValue((prev) => prev + "\n");
+    } else {
+      setValue((prev) => prev + button);
+    }
   };
 
   const handleFocus = () => {
     setShowKeyboard(true);
   };
 
-  const handleBlur = () => {
-    // Delay to allow keyboard click
-    setTimeout(() => setShowKeyboard(false), 200);
-  };
+  // 👇 Close keyboard when clicking outside input + keyboard
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target)
+      ) {
+        setShowKeyboard(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
-    <div className="hindi-input-container">
+    <div className="hindi-input-container" ref={wrapperRef}>
       <input
         ref={inputRef}
         type="text"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onFocus={handleFocus}
-        onBlur={handleBlur}
         placeholder="यहाँ हिंदी में टाइप करें..."
         className="form-control mb-2"
       />
@@ -50,7 +66,7 @@ const HindiKeyboardInput = ({ value, setValue }) => {
             "{enter}": "⏎",
             "{space}": "⎵"
           }}
-          onChange={onChange}
+          onKeyPress={onKeyPress}
           theme="hg-theme-default myTheme"
         />
       )}

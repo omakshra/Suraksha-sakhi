@@ -392,12 +392,19 @@ const getTranslatedCategory = (cat) => {
     <Container className="income-container">
       <h2 className="mb-3">{t.heading}</h2>
 
-      <InputGroup className="mb-3">
-        <FormControl
-          placeholder={t.search}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </InputGroup>
+      <div className="mb-3">
+  {selectedLanguage === "hi" ? (
+    <HindiKeyboardInput value={searchQuery} setValue={setSearchQuery} />
+  ) : (
+    <FormControl
+      placeholder={t.search}
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+    />
+  )}
+</div>
+
+
 
       {savingTips.length > 0 && (
         <Card className="mb-3 bg-light p-3">
