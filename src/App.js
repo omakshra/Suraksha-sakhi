@@ -10,19 +10,20 @@ import { translateTextWithHF } from './utils/huggingfaceapi';
 
 // ----------------- Home Component -----------------
 
-function Home() {
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    localStorage.getItem("selectedLanguage") || "en"
-  );
-
+function Home({ selectedLanguage, setSelectedLanguage }) {
   const [translatedContent, setTranslatedContent] = useState({
     title: "Welcome to Suraksha Sakhi",
     subtitle: "Use these tools to take control of your finances, grow your business, and secure your future.",
+    tagline: "Empowering women with AI, finance, and knowledge – in your language 🌸",
     features: [
       "Ask questions about savings, business, or laws in your language and get instant guidance.",
       "Easily track expenses, set goals for your children's education, and plan your business growth.",
       "Digitize handwritten bills, forms, or receipts in your language to manage paperwork easily."
-    ]
+    ],
+    currentLanguageLabel: "Current Language",
+    feedbackHeader: "Have Feedback or Questions?",
+    feedbackDescription: "We would love to hear from you to improve Suraksha for your needs.",
+    feedbackButton: "Send Feedback ✉️"
   });
 
   const [loading, setLoading] = useState(false);
@@ -43,11 +44,16 @@ function Home() {
         setTranslatedContent({
           title: "Welcome to Suraksha Sakhi",
           subtitle: "Use these tools to take control of your finances, grow your business, and secure your future.",
+          tagline: "Empowering women with AI, finance, and knowledge – in your language 🌸",
           features: [
             "Ask questions about savings, business, or laws in your language and get instant guidance.",
             "Easily track expenses, set goals for your children's education, and plan your business growth.",
             "Digitize handwritten bills, forms, or receipts in your language to manage paperwork easily."
-          ]
+          ],
+          currentLanguageLabel: "Current Language",
+          feedbackHeader: "Have Feedback or Questions?",
+          feedbackDescription: "We would love to hear from you to improve Suraksha for your needs.",
+          feedbackButton: "Send Feedback ✉️"
         });
         return;
       }
@@ -56,40 +62,32 @@ function Home() {
         setLoading(true);
 
         const textsToTranslate = [
-          "Welcome to Suraksha Sakhi",
           "Use these tools to take control of your finances, grow your business, and secure your future.",
+          "Empowering women with AI, finance, and knowledge – in your language 🌸",
           "Ask questions about savings, business, or laws in your language and get instant guidance.",
           "Easily track expenses, set goals for your children's education, and plan your business growth.",
-          "Digitize handwritten bills, forms, or receipts in your language to manage paperwork easily."
+          "Digitize handwritten bills, forms, or receipts in your language to manage paperwork easily.",
+          "Current Language",
+          "Have Feedback or Questions?",
+          "We would love to hear from you to improve Suraksha for your needs.",
+          "Send Feedback ✉️"
         ];
 
         const translatedTexts = await Promise.all(
-          textsToTranslate.map(async (text, idx) => {
-            const cacheKey = `translation_${selectedLanguage}_${text}`;
-            const useCache = false;
-            if (useCache) {
-              const cached = localStorage.getItem(cacheKey);
-              if (cached) return cached;
-            } else {
-              if (selectedLanguage === "hi" && idx === 0) {
-                localStorage.setItem(cacheKey, "सुरक्षा सखी में आपका स्वागत है");
-                return "सुरक्षा सखी में आपका स्वागत है";
-              } else if (selectedLanguage === "hi" && idx === 4) {
-                localStorage.setItem(cacheKey, "अपने दस्तावेज़ों को प्रबंधित करने के लिए हाथ से लिखे बिल, फॉर्म या रसीदों को डिजिटाइज़ करें।");
-                return "अपने दस्तावेज़ों को प्रबंधित करने के लिए हाथ से लिखे बिल, फॉर्म या रसीदों को डिजिटाइज़ करें।";
-              } else {
-                const translated = await translateTextWithHF(text, "en", selectedLanguage);
-                localStorage.setItem(cacheKey, translated);
-                return translated;
-              }
-            }
-          })
+          textsToTranslate.map((text) =>
+            translateTextWithHF(text, "en", selectedLanguage)
+          )
         );
 
         setTranslatedContent({
-          title: translatedTexts[0],
-          subtitle: translatedTexts[1],
-          features: [translatedTexts[2], translatedTexts[3], translatedTexts[4]]
+          title: selectedLanguage === "hi" ? "सुरक्षा सखी में आपका स्वागत है" : "Welcome to Suraksha Sakhi",
+          subtitle: translatedTexts[0],
+          tagline: translatedTexts[1],
+          features: [translatedTexts[2], translatedTexts[3], translatedTexts[4]],
+          currentLanguageLabel: translatedTexts[5],
+          feedbackHeader: translatedTexts[6],
+          feedbackDescription: translatedTexts[7],
+          feedbackButton: translatedTexts[8]
         });
       } catch (error) {
         console.error("Translation failed:", error);
@@ -101,6 +99,18 @@ function Home() {
     translateContent();
   }, [selectedLanguage]);
 
+  const featureCardTitles = selectedLanguage === "hi"
+    ? [
+        "🤖 एआई चैटबॉट सलाहकार",
+        "📊 स्मार्ट बजट योजनाकार",
+        "📝 दस्तावेज़ ट्रांसक्राइबर"
+      ]
+    : [
+        "🤖 AI Chatbot Advisor",
+        "📊 Smart Budget Planner",
+        "📝 Document Transcriber"
+      ];
+
   return (
     <div className="home-container">
       {loading ? (
@@ -111,9 +121,8 @@ function Home() {
       ) : (
         <>
           <h1>{translatedContent.title}</h1>
-          <p className="tagline">Empowering women with AI, finance, and knowledge – in your language 🌸</p>
+          <p className="tagline">{translatedContent.tagline}</p>
 
-          {/* Language Selector */}
           <div className="language-selector">
             <button onClick={() => handleLanguageSelect("en", "English")}>English</button>
             <button onClick={() => handleLanguageSelect("hi", "हिंदी")}>हिंदी</button>
@@ -121,39 +130,42 @@ function Home() {
             <button onClick={() => handleLanguageSelect("bn", "বাংলা")}>বাংলা</button>
           </div>
 
-          <p className="current-language">Current Language: {selectedLanguage.toUpperCase()}</p>
+          <p className="current-language">
+            {translatedContent.currentLanguageLabel}: {selectedLanguage.toUpperCase()}
+          </p>
           <p className="home-subtitle">{translatedContent.subtitle}</p>
 
-          {/* Feature Cards */}
           <div className="feature-cards">
             <FeatureCard
-              title="🤖 AI Chatbot Advisor"
+              title={featureCardTitles[0]}
               description={translatedContent.features[0]}
               link="/chatbot"
             />
             <FeatureCard
-              title="📊 Smart Budget Planner"
+              title={featureCardTitles[1]}
               description={translatedContent.features[1]}
               link="/budgetplanner"
             />
             <FeatureCard
-              title="📝 Document Transcriber"
+              title={featureCardTitles[2]}
               description={translatedContent.features[2]}
               link="/documenttranscriber"
             />
           </div>
 
-          {/* Feedback Section */}
           <div className="feedback-section">
-            <h3>Have Feedback or Questions?</h3>
-            <p>We would love to hear from you to improve Suraksha for your needs.</p>
-            <a href="mailto:contact@suraksha.ai" className="feedback-button">Send Feedback ✉️</a>
+            <h3>{translatedContent.feedbackHeader}</h3>
+            <p>{translatedContent.feedbackDescription}</p>
+            <a href="mailto:contact@suraksha.ai" className="feedback-button">
+              {translatedContent.feedbackButton}
+            </a>
           </div>
         </>
       )}
     </div>
   );
 }
+
 
 // ----------------- FeatureCard Component -----------------
 
@@ -169,19 +181,35 @@ function FeatureCard({ title, description, link }) {
 // ----------------- App Component -----------------
 
 function App() {
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    localStorage.getItem("selectedLanguage") || "en"
+  );
+
   return (
     <div className="App">
       <BrowserRouter>
         <Navbar />
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <Home
+                selectedLanguage={selectedLanguage}
+                setSelectedLanguage={setSelectedLanguage}
+              />
+            }
+          />
           {/* <Route path="/chatbot" element={<ChatbotAdvisor />} /> */}
           <Route path="/budgetplanner/*" element={<BudgetApp />} />
-          <Route path="/documenttranscriber" element={<DocumentTranscriber />} />
+          <Route
+            path="/documenttranscriber"
+            element={<DocumentTranscriber selectedLanguage={selectedLanguage} />}
+          />
         </Routes>
       </BrowserRouter>
     </div>
   );
 }
+
 
 export default App;

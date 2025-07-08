@@ -1,0 +1,18 @@
+{
+    "loan": "ऋण",
+    "borrower": "उधारकर्ता",
+    "lender": "ऋणदाता",
+    "principal": "मुख्य राशि",
+    "interest": "ब्याज",
+    "agreement": "समझौता",
+    "security": "सुरक्षा",
+    "installments": "किस्तों",
+    "collateral": "गिरवी",
+    "repayment": "भुगतान",
+    "terms": "शर्तें",
+    "amount": "राशि",
+    "party": "पक्ष",
+    "monthly": "मासिक",
+    "quarterly": "त्रैमासिक",
+    "annual": "वार्षिक"
+}
