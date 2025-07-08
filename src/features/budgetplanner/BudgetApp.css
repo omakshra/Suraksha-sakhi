@@ -139,3 +139,31 @@ body {
       font-size: 0.95rem;
   }
 }
+.emoji-burst {
+  animation: float 1.5s ease-out infinite alternate;
+  display: inline-block;
+}
+
+.glow-text {
+  animation: glow 1.5s ease-in-out infinite alternate;
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+@keyframes float {
+  from {
+    transform: translateY(0px) scale(1);
+  }
+  to {
+    transform: translateY(-5px) scale(1.1);
+  }
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 0 5px var(--accent-color), 0 0 10px var(--accent-color);
+  }
+  to {
+    text-shadow: 0 0 10px var(--accent-hover), 0 0 15px var(--accent-hover);
+  }
+}
