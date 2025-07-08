@@ -116,41 +116,28 @@ function Incomes() {
     return () => unsubscribe();
   }, []);
 
-  // AI Insights Logic
+  // AI Insights Logic – Saving Tips Only
   useEffect(() => {
     if (!incomes.length) return;
 
-    const categoryTotals = {};
-    incomes.forEach((inc) => {
-      const cat = inc.category || "Uncategorized";
-      categoryTotals[cat] = (categoryTotals[cat] || 0) + parseFloat(inc.amount);
-    });
-
-    const total = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
-    const sorted = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+    const total = incomes.reduce((sum, inc) => sum + parseFloat(inc.amount || 0), 0);
     const aiTips = [];
 
-    if (sorted.length) {
-      const [topCat, topAmt] = sorted[0];
-      aiTips.push(`💰 Top income source: "${topCat}" with ₹${topAmt.toFixed(2)}.`);
-    }
+    if (total > 0) {
+      const tenPercent = (total * 0.1).toFixed(2);
+      const fifteenPercent = (total * 0.15).toFixed(2);
+      const twentyPercent = (total * 0.2).toFixed(2);
+      const goldFive = (total * 0.05).toFixed(2);
+      const goldTen = (total * 0.1).toFixed(2);
 
-    sorted.forEach(([cat, amt]) => {
-  const contribution = amt / total;
-  if (contribution < 0.1) {
-    const targetAmount = total * 0.1;
-    const neededGrowth = targetAmount - amt;
-    aiTips.push(
-      `⚠️ "${cat}" is contributing only ₹${amt.toFixed(2)}. Try increasing it by ₹${neededGrowth.toFixed(2)} to reach 10% of your total income.`
-    );
-  }
-});
-
-
-    if (sorted[0][1] / total > 0.8) {
-      aiTips.push("🔴 Warning: You're relying heavily on one income source. Consider diversifying.");
-    } else {
-      aiTips.push("✅ Good job! You have a well-balanced income portfolio.");
+      aiTips.push(`💡 Your total income is ₹${total.toFixed(2)}. Here's how you can save smartly:`);
+      aiTips.push(`🔐 Save at least 10% (~₹${tenPercent}) in a Recurring Deposit (RD) – steady monthly returns.`);
+      aiTips.push(`📮 Save 15% (~₹${fifteenPercent}) using Post Office Schemes like POMIS or NSC – safe and government-backed.`);
+      aiTips.push(`👑 Invest 5–10% in Gold (~₹${goldFive} to ₹${goldTen}) – try Sovereign Gold Bonds (SGB) or Digital Gold for long-term safety and appreciation.`);
+      aiTips.push(`📊 Consider ELSS or PPF to save tax under Section 80C and build wealth. 👉 ` +
+  `<a href="https://www.nsiindia.gov.in/(S(kcmfazads4lcngixrnrpr355))/InternalPage.aspx?Id_Pk=27" target="_blank" rel="noopener noreferrer">Click here for more government schemes</a>`);
+      aiTips.push(`📈 Saving 20% (~₹${twentyPercent}) every month builds financial security over time. You're on the right track! 💚`);
+      aiTips.push(`💭 Tip: Cut down small luxuries and channel that into these saving plans.`);
     }
 
     setInsights(aiTips);
@@ -175,41 +162,38 @@ function Incomes() {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!name || !amount || !date || !description || !category) {
-    alert("All fields are required.");
-    return;
-  }
-
-  const confirmAction = window.confirm(
-    editing ? "Update this income?" : "Add new income?"
-  );
-  if (!confirmAction) return;
-
-  const incomeData = {
-    name,
-    amount: parseFloat(amount),
-    date,
-    description,
-    status: isPaid ? "PAID" : "DUE",
-    category,
-  };
-
-  try {
-    if (editing && currentIncome) {
-      const incomeDocRef = doc(db, "incomes", currentIncome.id);
-      await updateDoc(incomeDocRef, incomeData);
-    } else {
-      await addDoc(collection(db, "incomes"), incomeData);
+    if (!name || !amount || !date || !description || !category) {
+      alert(t.error);
+      return;
     }
-    resetForm();
-  } catch (error) {
-    console.error("Error saving income:", error);
-    alert("Error saving income. Check console for details.");
-  }
-};
 
+    const confirmAction = window.confirm(editing ? t.updateConfirm : t.addConfirm);
+    if (!confirmAction) return;
+
+    const incomeData = {
+      name,
+      amount: parseFloat(amount),
+      date,
+      description,
+      status: isPaid ? "PAID" : "DUE",
+      category,
+    };
+
+    try {
+      if (editing && currentIncome) {
+        const incomeDocRef = doc(db, "incomes", currentIncome.id);
+        await updateDoc(incomeDocRef, incomeData);
+      } else {
+        await addDoc(collection(db, "incomes"), incomeData);
+      }
+      resetForm();
+    } catch (error) {
+      console.error("Error saving income:", error);
+      alert("Error saving income. Check console for details.");
+    }
+  };
 
   const resetForm = () => {
     setName("");
@@ -223,8 +207,8 @@ function Incomes() {
   };
 
   const handleRemove = async (id) => {
-  const confirmDelete = window.confirm("Delete this income?");
-  if (!confirmDelete) return;
+    const confirmDelete = window.confirm(t.deleteConfirm);
+    if (!confirmDelete) return;
 
     try {
       const incomeDocRef = doc(db, "incomes", id);
@@ -303,10 +287,9 @@ function Incomes() {
           <h5>💡 AI Insights</h5>
           <ul style={{ textAlign: "left", paddingLeft: "20px" }}>
             {insights.map((tip, i) => (
-            <li key={i}>{tip}</li>
+              <li key={i} dangerouslySetInnerHTML={{ __html: tip }}></li>
             ))}
-        </ul>
-
+          </ul>
         </Card>
       )}
 
@@ -410,7 +393,7 @@ function Incomes() {
                   size="sm"
                   onClick={() => handleRemove(income.id)}
                 >
-                  <FontAwesomeIcon icon={faTrashCan} /> Remove
+                  <FontAwesomeIcon icon={faTrashCan} /> {t.remove}
                 </Button>
               </div>
             </div>

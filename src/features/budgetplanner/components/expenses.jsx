@@ -1,3 +1,5 @@
+// src/features/expenses/expenses.jsx
+
 import "./expenses.css";
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -53,7 +55,6 @@ function Expenses() {
   const [endMonth, setEndMonth] = useState("");
   const [lang, setLang] = useState(localStorage.getItem("selectedLanguage") || "en");
 
-  // ✅ Corrected: Detect localStorage changes using the correct key
   useEffect(() => {
     const interval = setInterval(() => {
       const newLang = localStorage.getItem("selectedLanguage") || "en";
@@ -84,13 +85,14 @@ function Expenses() {
   };
 
   const categories = [
-  "Groceries & Essentials",
-  "Childcare & Family Support",
-  "Home & Rent",
-  "Education & Career",
-  "Health & Medical",
-  "Personal Care",
-];
+    "Groceries & Essentials",
+    "Childcare & Family Support",
+    "Home & Rent",
+    "Education & Career",
+    "Health & Medical",
+    "Personal Care",
+    "Entertainment"
+  ];
 
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "expenses"), (snapshot) => {
@@ -240,6 +242,91 @@ function Expenses() {
     },
   };
 
+  const [aiInsights, setAiInsights] = useState({
+    topCategory: null,
+    leastCategory: null,
+    overspentCategories: [],
+    paidRatio: 0,
+    budgetSuggestions: [],
+    flaggedUnnecessary: [],
+  });
+
+  useEffect(() => {
+    if (expenses.length === 0) return;
+
+    const categoryTotals = {};
+    expenses.forEach((e) => {
+      const cat = e.category || "Uncategorized";
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + parseFloat(e.amount || 0);
+    });
+
+    const totalSpent = Object.values(categoryTotals).reduce((a, b) => a + b, 0);
+
+    const topCategory = Object.entries(categoryTotals).reduce(
+      (top, curr) => (curr[1] > top[1] ? curr : top),
+      ["None", 0]
+    );
+
+    const leastCategory = Object.entries(categoryTotals).reduce(
+      (least, curr) => (curr[1] < least[1] && curr[1] > 0 ? curr : least),
+      [null, Infinity]
+    );
+
+    const overspentCategories = Object.entries(categoryTotals).filter(
+      ([_, amt]) => amt > 0.4 * totalSpent
+    );
+
+    const paidCount = expenses.filter((e) => e.status === "PAID").length;
+    const dueCount = expenses.filter((e) => e.status === "DUE").length;
+    const totalCount = paidCount + dueCount;
+    const paidRatio = totalCount > 0 ? (paidCount / totalCount) * 100 : 0;
+
+    const idealBudget = {
+      "Groceries & Essentials": 15,
+      "Childcare & Family Support": 10,
+      "Home & Rent": 30,
+      "Education & Career": 10,
+      "Health & Medical": 15,
+      "Personal Care": 10,
+    };
+
+    const budgetSuggestions = Object.entries(categoryTotals).map(([cat, amt]) => {
+      const percentage = (amt / totalSpent) * 100;
+      const ideal = idealBudget[cat] || 10;
+      return {
+        category: cat,
+        actual: percentage.toFixed(1),
+        ideal,
+        status:
+          percentage > ideal + 5
+            ? "⚠️ Over Budget"
+            : percentage < ideal - 5
+            ? "✅ Under Budget"
+            : "👌 On Track",
+      };
+    });
+
+    const unnecessaryCategories = ["Personal Care"];
+    const flaggedUnnecessary = unnecessaryCategories
+      .filter((cat) => {
+        const amt = categoryTotals[cat] || 0;
+        return (amt / totalSpent) * 100 > 15;
+      })
+      .map((cat) => ({
+        category: cat,
+        percent: ((categoryTotals[cat] / totalSpent) * 100).toFixed(1),
+      }));
+
+    setAiInsights({
+      topCategory,
+      leastCategory,
+      overspentCategories,
+      paidRatio,
+      budgetSuggestions,
+      flaggedUnnecessary,
+    });
+  }, [expenses]);
+
   return (
     <Container className="expense-container">
       <h3 className="mb-4">{t.title}</h3>
@@ -249,6 +336,88 @@ function Expenses() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </InputGroup>
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+        <Card className="mb-4">
+          <Card.Body>
+            <Card.Title>💡 AI Expense Insights</Card.Title>
+            <ul style={{ textAlign: "left", paddingLeft: "1.2rem" }}>
+              <li>
+                📊 You're mostly spending money on <strong>{aiInsights.topCategory?.[0]}</strong>.
+              </li>
+              <li>
+                💸 You're spending the least on <strong>{aiInsights.leastCategory?.[0]}</strong>.
+              </li>
+              {aiInsights.overspentCategories.length > 0 ? (() => {
+                const essentialCategories = [
+                  "Home & Rent",
+                  "Health & Medical",
+                  "Education & Career",
+                  "Childcare & Family Support"
+                ];
+                const filteredOverspent = aiInsights.overspentCategories.filter(
+                  ([cat]) => !essentialCategories.includes(cat)
+                );
+                if (filteredOverspent.length === 0) {
+                  return (
+                    <li>✅ Most of your money is going into essential areas. That’s totally fine!</li>
+                  );
+                } else {
+                  return (
+                    <li>
+                      ⚠️ You're spending a lot on <strong>{filteredOverspent.map(([cat]) => cat).join(", ")}</strong>. Try to reduce if possible.
+                    </li>
+                  );
+                }
+              })() : (
+                <li>✅ Good job! No area has too much spending.</li>
+              )}
+              <li>
+                💰 So far, most expenses are <strong>{aiInsights.paidRatio > 50 ? "PAID" : "DUE"}</strong>.{" "}
+                {aiInsights.paidRatio > 50 ? "You're handling bills well." : "Try to clear dues when you can."}
+              </li>
+              <li>📋 Your category summary:</li>
+<ul>
+  {aiInsights.budgetSuggestions.map((s, i) => {
+    const essentials = [
+      "Home & Rent",
+      "Health & Medical",
+      "Education & Career",
+      "Childcare & Family Support",
+    ];
+    return (
+      <li key={i}>
+        {s.category}:{" "}
+        {s.status === "⚠️ Over Budget" ? (
+          essentials.includes(s.category) ? (
+            "This is a necessary cost like rent or health. Don't worry!"
+          ) : (
+            "Too much spent here. Try to lower it."
+          )
+        ) : s.status === "✅ Under Budget" ? (
+          "You're saving nicely here. Good job!"
+        ) : (
+          "Spending is balanced."
+        )}
+      </li>
+    );
+  })}
+</ul>
+
+              {aiInsights.flaggedUnnecessary.length > 0 ? (
+                <li>
+                  🚫 Try to cut back on extra things like{" "}
+                  {aiInsights.flaggedUnnecessary.map((f) => f.category).join(", ")}.
+                </li>
+              ) : (
+                <li>🎯 You're not wasting money. Well done!</li>
+              )}
+            </ul>
+          </Card.Body>
+        </Card>
+      </motion.div>
+
+
       <Row>
         <Col md={6}>
           <Form.Group className="mb-3">
@@ -419,3 +588,5 @@ function Expenses() {
 }
 
 export default Expenses;
+
+
