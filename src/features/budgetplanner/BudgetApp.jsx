@@ -75,7 +75,7 @@ function Dashboard({ totalIncomes, totalExpenses }) {
       happyHigh: "😊 High - You seem financially at peace",
       happyModerate: "🙂 Moderate - You're managing okay!",
       happyLow: "😟 Low - Too much stress from overspending",
-      chartTitle: "Income vs Expense",
+      chartTitle: "Happiness Index",
       chartLabels: ["Incomes", "Expenses"],
       happyNote: "Click here to set your personal goals & happiness",
 
@@ -101,7 +101,7 @@ function Dashboard({ totalIncomes, totalExpenses }) {
       happyHigh: "😊 उच्च - आप वित्तीय रूप से संतुलित हैं",
       happyModerate: "🙂 मध्यम - आप ठीक प्रबंध कर रहे हैं!",
       happyLow: "😟 कम - अधिक खर्च से तनाव हो सकता है",
-      chartTitle: "आय बनाम खर्च",
+      chartTitle: "खुशहाली सूचकांक",
       chartLabels: ["आय", "खर्च"],
       happyNote: "अपने व्यक्तिगत लक्ष्य और खुशी निर्धारित करने के लिए यहाँ क्लिक करें",
 
