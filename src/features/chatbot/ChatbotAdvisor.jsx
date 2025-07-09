@@ -15,33 +15,34 @@ function ChatBot({ selectedLanguage }) {
 });
 
   const sendMessage = async () => {
-    if (!input.trim()) return;
+  if (!input.trim()) return;
 
-    const newMessages = [...messages, { sender: 'user', text: input }];
-    setMessages(newMessages);
-    setInput('');
-    setIsLoading(true);
+  const newMessages = [...messages, { sender: 'user', text: input }];
+  setMessages(newMessages);
+  setInput('');
+  setIsLoading(true);
 
-    try {
-      const response = await fetch('http://localhost:5000/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
-      });
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: input }),
+    });
 
-      const data = await response.json();
-      if (data.reply) {
-        setMessages([...newMessages, { sender: 'bot', text: data.reply }]);
-      } else {
-        setMessages([...newMessages, { sender: 'bot', text: '⚠️ No response from server.' }]);
-      }
-    } catch (error) {
-      console.error('Chat error:', error);
-      setMessages([...newMessages, { sender: 'bot', text: '⚠️ Error talking to the bot.' }]);
-    } finally {
-      setIsLoading(false);
+    const data = await response.json();
+    if (data.reply) {
+      setMessages([...newMessages, { sender: 'bot', text: data.reply }]);
+    } else {
+      setMessages([...newMessages, { sender: 'bot', text: '⚠️ No response from server.' }]);
     }
-  };
+  } catch (error) {
+    console.error('Chat error:', error);
+    setMessages([...newMessages, { sender: 'bot', text: '⚠️ Error talking to the bot.' }]);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   const handleVoiceInput = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
