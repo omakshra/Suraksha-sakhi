@@ -29,7 +29,7 @@ const DocumentTranscriber = ({ selectedLanguage }) => {
     readAloud: "🔊 Read Aloud",
     stopReading: "⛔ Stop Reading",
     shareWhatsapp: "📲 Share on WhatsApp",
-    simplifyText: "✨ Simplify Text",
+    simplifyText: "✨ Summarize Text",
     revertSimplify: "↩️ Revert Simplify",
     copy: "Copy",
     showAdvanced: "⚙️ Show Advanced",
@@ -70,7 +70,7 @@ hideAdvanced: "⚙️ Hide Advanced",
         readAloud: "🔊 पढ़ें",
         stopReading: "⛔ पढ़ना रोकें",
         shareWhatsapp: "📲 व्हाट्सएप पर साझा करें",
-        simplifyText: "✨ पाठ सरल करें",
+        simplifyText: "✨ पाठ का सारांश",
         revertSimplify: "↩️ सरलता वापस लें",
         copy: "कॉपी करें",
         showAdvanced: "⚙️ उन्नत विकल्प दिखाएं",
@@ -92,7 +92,7 @@ hideAdvanced: "⚙️ उन्नत विकल्प छुपाएं",
         readAloud: "🔊 Read Aloud",
         stopReading: "⛔ Stop Reading",
         shareWhatsapp: "📲 Share on WhatsApp",
-        simplifyText: "✨ Simplify Text",
+        simplifyText: "✨ Summarize Text",
         revertSimplify: "↩️ Revert Simplify",
         copy: "Copy",
         showAdvanced: "⚙️ Show Advanced",
@@ -239,7 +239,7 @@ const handleReadAloud = () => {
     alert(labels.copyAlert);
   };
 const handleSimplifyToggle = async () => {
-    const baseText = extractedText;
+    const baseText = isTranslated ? translatedText : extractedText;
 
     if (isSimplified) {
         // Revert
@@ -254,9 +254,25 @@ const handleSimplifyToggle = async () => {
 
         setLoading(true);
         try {
-            const summary = await sendTextToChatbotForSummary(baseText);
-            setSimplifiedText(summary);
-            setSimplifiedTextEn(summary);
+            let textForSummary = baseText;
+
+            // If the text is in Hindi, translate it to English for summarization
+            const isHindi = /[\u0900-\u097F]/.test(textForSummary);
+            if (isHindi) {
+                textForSummary = await translateTextWithHF(textForSummary, "hi", "en");
+            }
+
+            // Summarize the English text
+            const summaryEn = await sendTextToChatbotForSummary(textForSummary);
+
+            // If originally in Hindi, translate the summary back to Hindi
+            let finalSummary = summaryEn;
+            if (isHindi) {
+                finalSummary = await translateTextWithHF(summaryEn, "en", "hi");
+            }
+
+            setSimplifiedText(finalSummary);
+            setSimplifiedTextEn(summaryEn);
             setIsSimplified(true);
         } catch (error) {
             console.error(error);
