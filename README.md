@@ -1,70 +1,124 @@
-# Getting Started with Create React App
+try it out link - https://suraksha-sakhi-git-main-omakshras-projects.vercel.app/
+---
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# 🌸 Suraksha Sakhi
 
-## Available Scripts
+**Suraksha Sakhi is a smart digital friend that helps women confidently manage money, understand documents, and get clear, trustworthy answers to financial, legal, and business questions.** It offers a friendly chatbot advisor, a simple visual budget planner, and a document transcriber with translation and summarization—designed for local languages, low data use, and voice-first access, meeting women where they are and helping them take charge of their future.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## ✨ Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+✅ Chatbot advisor for financial, legal, and business-related queries
+✅ Visual budget planner with simple income-expense tracking and insights
+✅ Document transcriber with translation and summarization
+✅ Multilingual, voice-first, and low-data accessible design
+✅ Lightweight, user-friendly interface for women in rural and semi-urban settings
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## 🚀 Tech Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+* **Frontend:** React.js, Tailwind CSS
+* **Backend:** Node.js, Express
+* **Database:** Firebase Firestore
+* **OCR:** Tesseract.js
+* **Translation:** Mistral (via API)
+* **Chatbot and Summarization:** OpenAI (via API)
+* **Deployment:** Vercel (frontend), Railway/Render (backend planned)
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🛠️ Getting Started
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 1️⃣ Clone the Repository
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+git clone https://github.com/your-username/suraksha-sakhi.git
+cd suraksha-sakhi
+```
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 2️⃣ Run the Frontend
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. Install dependencies:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+   ```bash
+   npm install
+   ```
+2. Start the frontend:
 
-## Learn More
+   ```bash
+   npm start
+   ```
+3. The app will run locally at:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+   ```
+   http://localhost:3000
+   ```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+### 3️⃣ Run the Chatbot Server
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. Navigate to your chatbot backend directory if it is separate:
 
-### Analyzing the Bundle Size
+   ```bash
+   cd suraksha-sakhi/src/features/server
+   ```
+2. Install dependencies:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+   ```bash
+   npm install
+   ```
+3. Add your environment variable:
 
-### Making a Progressive Web App
+   * Create a `.env` file and add:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+     ```
+     OPENROUTER_API_KEY=your_api_key_here
+     ```
+4. Start the chatbot server:
 
-### Advanced Configuration
+   ```bash
+   node index.js
+   ```
+5. The server will run locally at:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+   ```
+   http://localhost:5000
+   ```
+6. Ensure your frontend fetch calls point to this local server or your deployed backend URL.
 
-### Deployment
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📦 Deployment
 
-### `npm run build` fails to minify
+Frontend: Deployed on Vercel for fast, scalable hosting.
+Backend: Also deployed on Vercel using Serverless Functions for chatbot API functionality, ensuring seamless integration within the same environment.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome. For major changes, please open an issue first to discuss proposed changes.
+
+---
+
+## 📄 License
+
+MIT License.
+
+---
+
+## 📬 Contact
+
+For queries, reach out at:
+
+* Email: akshratvm@gmail.com or vasundharaa.1720@gmail.com , pragalyajs92@gmail.com
+
+---
+
+
